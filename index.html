@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Monitor de Cursos y Talleres · Bibliotecas Duoc UC"/>
+  <title>Monitor Talleres · Duoc UC v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--y:#FBBF24;--n:#0F1629;--g:#10B981;--r:#EF4444;--o:#F97316;--b:#3B82F6;--p:#A855F7;--bg:#EEF0F5;--solid:#fff;--inp:#fff;--t1:#0F172A;--t2:#475569;--t3:#94A3B8;--brd:rgba(0,0,0,0.09);--sh1:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);--sh2:0 8px 32px rgba(0,0,0,.10);--shx:0 24px 64px rgba(0,0,0,.16);--r18:18px;--gb:rgba(255,255,255,0.8);--gbr:rgba(255,255,255,0.55)}
+    [data-theme=dark]{--bg:#0F172A;--solid:#1E293B;--inp:#1E293B;--t1:#F8FAFC;--t2:#94A3B8;--t3:#64748B;--brd:rgba(255,255,255,0.08);--sh1:0 4px 20px rgba(0,0,0,0.25),0 1px 3px rgba(0,0,0,0.15);--sh2:0 8px 32px rgba(0,0,0,0.35);--shx:0 24px 64px rgba(0,0,0,0.45);--gb:rgba(30,41,59,0.78);--gbr:rgba(255,255,255,0.08)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+    ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--t3);border-radius:4px}
+    #_load{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);z-index:9999;transition:opacity .4s}
+    #_load.out{opacity:0;pointer-events:none}#_load.gone{display:none}
+    ._spin{width:36px;height:36px;border:3px solid rgba(251,191,36,.2);border-top-color:#FBBF24;border-radius:50%;animation:spin .8s linear infinite}
+    #_err{display:none;position:fixed;top:0;left:0;right:0;z-index:10000;background:#FEF2F2;border-bottom:2px solid #EF4444;color:#DC2626;padding:12px 20px;font-size:13px;white-space:pre-wrap;max-height:30vh;overflow:auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes scPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+    .fadeUp{animation:fadeUp .45s cubic-bezier(.22,1,.36,1) both}.scPop{animation:scPop .35s cubic-bezier(.22,1,.36,1) both}
+    .card{background:var(--gb);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--gbr);border-radius:var(--r18);box-shadow:var(--sh1)}
+    button{cursor:pointer;border:none;outline:none;font-family:inherit;background:transparent}
+    .btnP{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;background:linear-gradient(135deg,#FBBF24,#D97706);color:#0F172A;font-weight:800;font-size:13px;border-radius:10px;box-shadow:0 2px 10px rgba(251,191,36,.4);transition:all .2s;white-space:nowrap}
+    .btnP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(251,191,36,.5)}
+    .btnG{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--brd);color:var(--t2);font-weight:700;font-size:12px;border-radius:9px;border:1px solid var(--brd);transition:all .2s}
+    .btnG:hover{color:var(--t1)}
+    .btnI{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--brd);color:var(--t1);transition:all .2s}
+    .tabBar{display:flex;gap:4px;overflow-x:auto;padding:6px;background:var(--gb);backdrop-filter:blur(14px);border:1px solid var(--gbr);border-radius:16px;box-shadow:var(--sh1);scrollbar-width:none}
+    .tabBar::-webkit-scrollbar{display:none}
+    .tab{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:11px;font-size:13px;font-weight:700;color:var(--t2);white-space:nowrap;position:relative;transition:all .2s}
+    .tab:hover{color:var(--t1);background:var(--brd)}.tab.on{background:linear-gradient(135deg,#FBBF24,#D97706);color:#0F172A;box-shadow:0 2px 14px rgba(251,191,36,.35)}
+    .tabBadge{position:absolute;top:3px;right:3px;min-width:16px;height:16px;padding:0 4px;background:#EF4444;color:#fff;border-radius:8px;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center}
+    .pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid var(--brd);color:var(--t2);transition:all .18s}
+    .pill:hover{border-color:var(--y);color:#D97706}.pill.on{background:#0F1629;color:#FBBF24;border-color:#0F1629}
+    [data-theme=dark] .pill.on{background:#FBBF24;color:#0F1629;border-color:#FBBF24}
+    .kpiG{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media(max-width:768px){.kpiG{grid-template-columns:1fr}}
+    .card:has(.ddMenu){position:relative;z-index:50}
+    .kpiCard{border-radius:var(--r18);padding:22px 24px;position:relative;transition:transform .25s}.kpiCard:hover{transform:translateY(-3px);z-index:60}
+    .kpiCard:has(.infoTooltipOpen){z-index:60}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800}
+    .bGood{background:rgba(16,185,129,.15);color:#10B981}.bWarn{background:rgba(249,115,22,.15);color:#F97316}.bCrit{background:rgba(239,68,68,.15);color:#EF4444}
+    [data-theme=dark] .bGood{background:rgba(16,185,129,.2)}[data-theme=dark] .bWarn{background:rgba(249,115,22,.2)}[data-theme=dark] .bCrit{background:rgba(239,68,68,.2)}
+    select{background:var(--inp);color:var(--t1);border:1px solid var(--brd);border-radius:9px;padding:7px 12px;font-size:13px;font-weight:600;font-family:inherit;outline:none;cursor:pointer;transition:border-color .2s}
+    select:focus{border-color:var(--y)}
+    .uZone{border:2px dashed var(--brd);border-radius:16px;padding:36px 28px;text-align:center;cursor:pointer;transition:all .25s}
+    .uZone:hover,.uZone.on{border-color:var(--y);background:rgba(251,191,36,.05)}
+    .mBack{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp .2s ease}
+    .mBox{background:var(--solid);border-radius:22px;box-shadow:var(--shx);border:1px solid var(--gbr);width:100%;max-width:680px;max-height:87vh;display:flex;flex-direction:column;overflow:hidden;animation:scPop .3s cubic-bezier(.22,1,.36,1)}
+    .cWrap{background:var(--gb);backdrop-filter:blur(14px);border:1px solid var(--gbr);border-radius:var(--r18);box-shadow:var(--sh1);padding:22px 24px}
+    .cTip{background:var(--solid);border:1px solid var(--brd);border-radius:13px;padding:11px 15px;box-shadow:var(--sh2);font-size:13px;font-family:'Inter',sans-serif;min-width:150px}
+    .hCell{border-radius:5px;transition:transform .15s,box-shadow .15s;cursor:default}.hCell:hover{transform:scale(1.18);box-shadow:0 3px 10px rgba(0,0,0,.25)}
+    .ddMenu{position:absolute;top:calc(100% + 6px);left:0;z-index:150;background:var(--solid);border:1px solid var(--brd);border-radius:15px;box-shadow:var(--shx);min-width:230px;max-height:280px;overflow-y:auto;padding:6px 0;animation:fadeUp .2s ease}
+    .pivRow{border-bottom:1px solid var(--brd);transition:background .15s}.pivRow:hover{background:rgba(251,191,36,.06)}
+    table{width:100%;border-collapse:collapse}th,td{text-align:left}
+    .sTitle{font-size:15px;font-weight:900;color:var(--t1)}.sSub{font-size:12px;color:var(--t3);margin-top:3px}
+    .trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    @media(max-width:900px){.twoCol{grid-template-columns:1fr !important}}
+  </style>
+</head>
+<body>
+<div id="_load">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/3840px-Logo_DuocUC.svg.png" alt="Duoc UC" style="height:36px;object-fit:contain"/>
+  <div class="_spin"></div>
+  <p style="font-weight:700;font-size:14px;color:#475569">Cargando dashboard...</p>
+  <p style="font-size:12px;color:#94A3B8">Monitor de Talleres · Bibliotecas Duoc UC</p>
+</div>
+<div id="_err"></div>
+<div id="root"></div>
+
+<script>
+window._showErr = function(m){ var b=document.getElementById('_err'); b.style.display='block'; b.textContent='⚠ '+m; document.getElementById('_load').className='gone'; };
+window.onerror = function(m,s,l){ window._showErr(m+' (línea '+l+')'); return false; };
+window.addEventListener('unhandledrejection',function(e){ window._showErr(e.reason&&e.reason.message?e.reason.message:String(e.reason)); });
+</script>
+
+<!-- CDN: React y Babel desde jsDelivr; Chart.js y otros desde cdnjs (mismo dominio que jsPDF) -->
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.8/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  var m=[];
+  if(typeof React==='undefined') m.push('React');
+  if(typeof ReactDOM==='undefined') m.push('ReactDOM');
+  if(typeof Chart==='undefined') m.push('Chart.js');
+  if(typeof ChartDataLabels==='undefined') m.push('ChartDataLabels');
+  if(m.length) window._showErr('No se pudieron cargar: '+m.join(', ')+'. Verifica tu conexión a internet.');
+  else {
+    Chart.register(ChartDataLabels);
+    Chart.defaults.plugins.datalabels.display = false;
+  }
+});
+</script>
+
+<script type="text/babel">
+try {
+
+const { useState, useMemo, useRef, useEffect } = React;
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const C={y:'#FBBF24',n:'#0F1629',g:'#10B981',r:'#EF4444',o:'#F97316',b:'#3B82F6',p:'#A855F7'};
+const PAL=['#FBBF24','#3B82F6','#10B981','#F97316','#A855F7','#EC4899'];
+
+/* ── SOUND ─────────────────────────── */
+const sfx=t=>{try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const c=new AC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);if(t==='ok'){o.type='triangle';o.frequency.setValueAtTime(440,c.currentTime);o.frequency.setValueAtTime(660,c.currentTime+.1);g.gain.setValueAtTime(.04,c.currentTime);g.gain.linearRampToValueAtTime(0,c.currentTime+.28);o.start();o.stop(c.currentTime+.28);}else{o.type='sine';o.frequency.setValueAtTime(480,c.currentTime);o.frequency.exponentialRampToValueAtTime(240,c.currentTime+.07);g.gain.setValueAtTime(.035,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.07);o.start();o.stop(c.currentTime+.07);}}catch(e){}};
+
+/* ── CSV ───────────────────────────── */
+const san=t=>t?t.toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim():'';
+const toNum=v=>{if(!v)return null;const n=parseFloat(v.toString().replace(/[^0-9,.\-]/g,'').replace(',','.'));return isNaN(n)?null:n;};
+const parseCSV=txt=>{const lines=txt.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());if(!lines.length)return{headers:[],data:[]};const sep=(lines[0].match(/;/g)||[]).length>(lines[0].match(/,/g)||[]).length?';':',';const sp=l=>{const re=new RegExp(`${sep}(?=(?:(?:[^"]*"){2})*[^"]*$)`);return l.split(re).map(v=>v.replace(/(^"|"$)/g,'').trim());};const headers=sp(lines[0]);return{headers,data:lines.slice(1).map(l=>{const r=sp(l);return Object.fromEntries(headers.map((h,i)=>[h,r[i]??'']));})};};
+const normD=s=>{if(!s||typeof s!=='string'||['Sin fecha','Todas'].includes(s))return 'Sin fecha';let d=s.trim().split(/[\sT_]/)[0].replace(/[\/\.]/g,'-');const p=d.split('-');if(p.length>=2){const[dd,mm]=p[0].length===4?[p[2]||'01',p[1]]:[p[0],p[1]];if(!isNaN(dd)&&!isNaN(mm))return`${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;}return 'Fecha Desconocida';};
+const fmtD=f=>{if(f==='Todas')return 'Todas las fechas';if(['Sin fecha','Fecha Desconocida'].includes(f))return f;const[mm,dd]=f.split('-').map(Number);return mm>=1&&mm<=12?`${dd} de ${MESES[mm-1]}`:f;};
+const detectMes=fn=>{const n=fn.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');return MESES.find(m=>n.includes(m.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')))||null;};
+
+/* ── ICONS ─────────────────────────── */
+const PATHS={
+  upload:'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12',
+  users:'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+  award:'M12 2a6 6 0 110 12 6 6 0 010-12M8.21 13.89L7 23l5-3 5 3-1.21-9.11',
+  trend:'M23 6L13.5 15.5 8.5 10.5 1 18M17 6h6v6',
+  filter:'M22 3H2l8 9.46V19l4 2V12.46z',
+  download:'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3',
+  trophy:'M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z',
+  chUp:'M18 15l-6-6-6 6', chDown:'M6 9l6 6 6-6',
+  alert:'M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0M12 9v4M12 17h.01',
+  check:'M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3',
+  moon:'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z',
+  sun:'M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42',
+  pdf:'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8L14 2M14 2v6h6M16 13H8M16 17H8',
+  bar:'M18 20V10M12 20V4M6 20v-6',
+  radar:'M12 2l10 6.5v7L12 22 2 15.5v-7zM12 2v20M2 8.5h20M2 15.5h20',
+  scatter:'M7 7m-2 0a2 2 0 104 0 2 2 0 00-4 0M17 6m-2 0a2 2 0 104 0 2 2 0 00-4 0M12 12m-2 0a2 2 0 104 0 2 2 0 00-4 0M8 17m-2 0a2 2 0 104 0 2 2 0 00-4 0M18 15m-2 0a2 2 0 104 0 2 2 0 00-4 0',
+  cal:'M3 4h18a2 2 0 012 2v14a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2M16 2v4M8 2v4M3 10h18',
+  pin:'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0M12 10m-3 0a3 3 0 106 0 3 3 0 00-6 0',
+  book:'M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5V6.5A2.5 2.5 0 016.5 4H20v16H6.5A2.5 2.5 0 014 19.5z',
+  bld:'M3 3h18a2 2 0 012 2v9a2 2 0 01-2 2H3a2 2 0 01-2-2V5a2 2 0 012-2M8 21h8M12 17v4',
+  x:'M18 6L6 18M6 6l12 12',
+  compare:'M2 2h9a2 2 0 012 2v16a2 2 0 01-2 2H2zM13 2h9v20h-9',
+  pivot:'M3 3h18a2 2 0 012 2v14a2 2 0 01-2 2H3a2 2 0 01-2-2V5a2 2 0 012-2M3 9h18M3 15h18M9 3v18',
+  heat:'M3 3h7a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1M14 3h7a1 1 0 011 1v7a1 1 0 01-1 1h-7a1 1 0 01-1-1V4a1 1 0 011-1M14 14h7a1 1 0 011 1v5a1 1 0 01-1 1h-7a1 1 0 01-1-1v-5a1 1 0 011-1M3 14h7a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5a1 1 0 011-1',
+};
+const Ico=({n,size=16,color='currentColor',style={}})=>{
+  const d=PATHS[n]||'';
+  return(
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
+      fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      style={{display:'inline-block',flexShrink:0,...style}}>
+      {d.split('M').filter(Boolean).map((seg,i)=><path key={i} d={'M'+seg}/>)}
+    </svg>
+  );
+};
+
+/* ── CHART.JS HELPERS ──────────────── */
+const cjsDef=dark=>({
+  grid: dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)',
+  tick: dark?'#94A3B8':'#6B7280',
+  leg:  dark?'#94A3B8':'#475569',
+  fontFamily:'Inter,system-ui,sans-serif',
+});
+const killChart=ref=>{if(ref.current){ref.current.destroy();ref.current=null;}};
+
+/* ── AREA CHART ────────────────────── */
+const AreaChart=({data,dark})=>{
+  const canR=useRef(null),chR=useRef(null);
+  useEffect(()=>{
+    if(!canR.current||!window.Chart) return;
+    killChart(chR);
+    if(!data.length) return;
+    const {grid,tick,leg,fontFamily}=cjsDef(dark);
+    const ins_c=dark?'#60A5FA':'#1E3A5F';
+    chR.current=new window.Chart(canR.current,{
+      type:'line',
+      data:{
+        labels:data.map(d=>d.label),
+        datasets:[
+          {label:'Inscritos',data:data.map(d=>d.Inscritos),borderColor:ins_c,backgroundColor:ins_c+'28',fill:true,borderWidth:2.5,pointRadius:4,tension:.4,pointBackgroundColor:ins_c},
+          {label:'Aprobados',data:data.map(d=>d.Aprobados),borderColor:'#FBBF24',backgroundColor:'rgba(251,191,36,.18)',fill:true,borderWidth:2.5,pointRadius:4,tension:.4,pointBackgroundColor:'#FBBF24'},
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{labels:{color:leg,font:{family:fontFamily,weight:'700',size:12}}},
+          tooltip:{
+            cornerRadius:10,
+            titleFont:{family:fontFamily,weight:'700'},
+            bodyFont:{family:fontFamily},
+            footerFont:{family:fontFamily,weight:'600'},
+            callbacks:{
+              footer:(items)=>{
+                const idx=items[0].dataIndex;
+                const pt=data[idx];
+                if(pt&&pt.talleresList&&pt.talleresList.length){
+                  const limit=6;
+                  const list=pt.talleresList.slice(0,limit).map(t=>`• ${t}`);
+                  if(pt.talleresList.length>limit) {
+                    list.push(`... y ${pt.talleresList.length-limit} más`);
+                  }
+                  return '\nTalleres:\n'+list.join('\n');
+                }
+                return '';
+              }
+            }
+          }
+        },
+        scales:{x:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}}},y:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}}}}}
+    });
+    return()=>killChart(chR);
+  },[data,dark]);
+  if(!data.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin datos de fechas disponibles</p>;
+  return <div style={{position:'relative',height:280}}><canvas ref={canR}/></div>;
+};
+
+/* ── BAR CHART (grouped, vertical) ── */
+const BarChart=({data,lk='name',colors,dark,height=280,rotate=true,clickable=false,onClickBar,sortable=true})=>{
+  const[showIns,setShowIns]=useState(true);const[showApr,setShowApr]=useState(true);
+  const canR=useRef(null),chR=useRef(null);
+  const dc=dark?['#60A5FA','#FBBF24']:(colors||['#1E3A5F','#FBBF24']);
+  const sortedData=useMemo(()=>{
+    if(!sortable)return data;
+    return[...data].sort((a,b)=>{
+      if(showIns)return b.Inscritos-a.Inscritos;
+      if(showApr)return b.Aprobados-a.Aprobados;
+      return b.Inscritos-a.Inscritos;
+    });
+  },[data,showIns,showApr,sortable]);
+  useEffect(()=>{
+    if(!canR.current||!window.Chart||!sortedData.length) return;
+    killChart(chR);
+    const {grid,tick,leg,fontFamily}=cjsDef(dark);
+    chR.current=new window.Chart(canR.current,{
+      type:'bar',
+      data:{labels:sortedData.map(d=>{
+          const isMonth=MESES.includes(d[lk]);
+          if(isMonth&&d.Sesiones){
+            return `${d[lk]} (${d.Sesiones} ses.)`;
+          }
+          return d[lk];
+        }),
+        datasets:[
+          {label:'Inscritos',data:sortedData.map(d=>d.Inscritos),backgroundColor:dc[0],borderRadius:6,borderSkipped:false,hidden:!showIns},
+          {label:'Aprobados',data:sortedData.map(d=>d.Aprobados),backgroundColor:dc[1],borderRadius:6,borderSkipped:false,hidden:!showApr},
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        onClick:clickable?(_,els)=>{if(els.length&&onClickBar)onClickBar(sortedData[els[0].index]);}:undefined,
+        plugins:{
+          legend:{
+            labels:{color:leg,font:{family:fontFamily,weight:'700',size:12}},
+            onClick:(e,legendItem,legend)=>{sfx();const idx=legendItem.datasetIndex;if(idx===0)setShowIns(p=>!p);if(idx===1)setShowApr(p=>!p);}
+          },
+          tooltip:{cornerRadius:10,titleFont:{family:fontFamily,weight:'700'},bodyFont:{family:fontFamily}},
+          datalabels:{
+            display:true,
+            anchor:'end',
+            align:'top',
+            color:dark?'#F1F5F9':'#0F172A',
+            font:{family:fontFamily,weight:'700',size:10},
+            formatter:(v)=>v>0?v:''
+          }
+        },
+        scales:{x:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:10},maxRotation:rotate?40:0}},y:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}},grace:'8%'}}}
+    });
+    return()=>killChart(chR);
+  },[sortedData,dark,showIns,showApr]);
+  if(!data.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin datos</p>;
+  return <div style={{position:'relative',height}}><canvas ref={canR}/></div>;
+};
+
+/* ── HORIZONTAL BAR CHART ──────────── */
+const HBarChart=({data,lk='name',colors,dark,height,clickable=false,onClickBar,sortable=true})=>{
+  const[showIns,setShowIns]=useState(true);const[showApr,setShowApr]=useState(true);
+  const canR=useRef(null),chR=useRef(null);
+  const dc=dark?['#60A5FA','#FBBF24']:(colors||['#1E3A5F','#FBBF24']);
+  const sortedData=useMemo(()=>{
+    if(!sortable)return data;
+    return[...data].sort((a,b)=>{
+      if(showIns)return b.Inscritos-a.Inscritos;
+      if(showApr)return b.Aprobados-a.Aprobados;
+      return b.Inscritos-a.Inscritos;
+    });
+  },[data,showIns,showApr,sortable]);
+  const h=height||Math.max(280,sortedData.length*46);
+  useEffect(()=>{
+    if(!canR.current||!window.Chart||!sortedData.length) return;
+    killChart(chR);
+    const {grid,tick,leg,fontFamily}=cjsDef(dark);
+    chR.current=new window.Chart(canR.current,{
+      type:'bar',
+      data:{labels:sortedData.map(d=>d[lk]),
+        datasets:[
+          {label:'Inscritos',data:sortedData.map(d=>d.Inscritos),backgroundColor:dc[0],borderRadius:5,borderSkipped:false,hidden:!showIns},
+          {label:'Aprobados',data:sortedData.map(d=>d.Aprobados),backgroundColor:dc[1],borderRadius:5,borderSkipped:false,hidden:!showApr},
+        ]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        onClick:clickable?(_,els)=>{if(els.length&&onClickBar)onClickBar(sortedData[els[0].index]);}:undefined,
+        plugins:{
+          legend:{
+            labels:{color:leg,font:{family:fontFamily,weight:'700',size:12}},
+            onClick:(e,legendItem,legend)=>{sfx();const idx=legendItem.datasetIndex;if(idx===0)setShowIns(p=>!p);if(idx===1)setShowApr(p=>!p);}
+          },
+          tooltip:{cornerRadius:10,titleFont:{family:fontFamily,weight:'700'},bodyFont:{family:fontFamily}},
+          datalabels:{
+            display:true,
+            anchor:'end',
+            align:'right',
+            color:dark?'#F1F5F9':'#0F172A',
+            font:{family:fontFamily,weight:'700',size:10},
+            formatter:(v)=>v>0?v:''
+          }
+        },
+        scales:{x:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}},grace:'8%'},y:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11},crossAlign:'far'}}}}
+    });
+    return()=>killChart(chR);
+  },[sortedData,dark,showIns,showApr]);
+  if(!data.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin datos</p>;
+  return <div style={{position:'relative',height:h}}><canvas ref={canR}/></div>;
+};
+
+/* ── TOP SEDES COMBO CHART ─────────── */
+/* ── TOP SEDES COMBO CHART ─────────── */
+const TopSedesCombo=({bySede,dark})=>{
+  const canR=useRef(null),chR=useRef(null);
+  const top=useMemo(()=>bySede.slice(0,5),[bySede]);
+  useEffect(()=>{
+    if(!canR.current||!window.Chart||top.length<2) return;
+    killChart(chR);
+    const {grid,tick,leg,fontFamily}=cjsDef(dark);
+    const ins_c=dark?'#60A5FA':'#1E3A5F';
+    const apr_c='#FBBF24';
+    const line_c=dark?'#FF5E80':'#E11D48';
+    
+    chR.current=new window.Chart(canR.current,{
+      data:{
+        labels:top.map(s=>s.name.length>18?s.name.slice(0,16)+'…':s.name),
+        datasets:[
+          {
+            type:'bar',
+            label:'Inscritos',
+            data:top.map(s=>s.Inscritos),
+            backgroundColor:ins_c,
+            borderRadius:5,
+            yAxisID:'y'
+          },
+          {
+            type:'bar',
+            label:'Aprobados',
+            data:top.map(s=>s.Aprobados),
+            backgroundColor:apr_c,
+            borderRadius:5,
+            yAxisID:'y'
+          },
+          {
+            type:'line',
+            label:'Tasa de Aprobación %',
+            data:top.map(s=>s.Inscritos>0?Math.round(s.Aprobados/s.Inscritos*100):0),
+            borderColor:line_c,
+            backgroundColor:line_c+'20',
+            borderWidth:4.5,
+            pointRadius:6.5,
+            pointHoverRadius:9,
+            pointBackgroundColor:line_c,
+            tension:0.35,
+            yAxisID:'yPercent'
+          }
+        ]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{labels:{color:leg,font:{family:fontFamily,weight:'700',size:11}}},
+          tooltip:{
+            cornerRadius:10,
+            titleFont:{family:fontFamily,weight:'700'},
+            bodyFont:{family:fontFamily}
+          },
+          datalabels:{
+            display:true,
+            anchor:'end',
+            align:'top',
+            offset:4,
+            backgroundColor:(context)=>{
+              if(context.dataset.type==='line') return dark?'#1E293B':'#FFFFFF';
+              return null;
+            },
+            borderColor:(context)=>{
+              if(context.dataset.type==='line') return line_c;
+              return null;
+            },
+            borderWidth:(context)=>{
+              if(context.dataset.type==='line') return 1.5;
+              return 0;
+            },
+            borderRadius:5,
+            padding:(context)=>{
+              if(context.dataset.type==='line') return {top:3,bottom:3,left:6,right:6};
+              return 0;
+            },
+            color:(context)=>{
+              return context.dataset.type === 'line' ? line_c : (dark?'#F8FAFC':'#0F172A');
+            },
+            font:{family:fontFamily,weight:'800',size:11},
+            formatter:(v,context)=>{
+              if(context.dataset.type==='line') return v+'%';
+              return v>0?v:'';
+            }
+          }
+        },
+        scales:{
+          x:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:10}}},
+          y:{
+            type:'linear',
+            position:'left',
+            grid:{color:grid},
+            ticks:{color:tick,font:{family:fontFamily,size:10}},
+            grace:'10%'
+          },
+          yPercent:{
+            type:'linear',
+            position:'right',
+            min:0,
+            max:100,
+            grid:{drawOnChartArea:false},
+            ticks:{
+              color:tick,
+              font:{family:fontFamily,size:10},
+              callback:(val)=>val+'%'
+            }
+          }
+        }
+      }
+    });
+    return()=>killChart(chR);
+  },[top,dark]);
+  if(top.length<2) return <p style={{textAlign:'center',padding:36,color:'var(--t3)',fontSize:13}}>Sin datos de sedes suficientes</p>;
+  return <div style={{position:'relative',height:300}}><canvas ref={canR}/></div>;
+};
+
+/* ── SCATTER ───────────────────────── */
+const ScatterComp=({byTaller,dark})=>{
+  const canR=useRef(null),chR=useRef(null);
+  useEffect(()=>{
+    if(!canR.current||!window.Chart||!byTaller.length) return;
+    killChart(chR);
+    const {grid,tick,fontFamily}=cjsDef(dark);
+    const pts=byTaller.map(d=>({x:d.Inscritos,y:d.Inscritos>0?+(d.Aprobados/d.Inscritos*100).toFixed(1):0,nm:d.name}));
+    const maxX=Math.max(...pts.map(p=>p.x),10)*1.1;
+    chR.current=new window.Chart(canR.current,{
+      type:'scatter',
+      data:{datasets:[
+        {label:'Talleres',data:pts,backgroundColor:pts.map((_,i)=>PAL[i%PAL.length]+'b0'),borderColor:pts.map((_,i)=>PAL[i%PAL.length]),borderWidth:1.5,pointRadius:7,pointHoverRadius:10},
+        {label:'Mín 60%',data:[{x:0,y:60},{x:maxX,y:60}],type:'line',borderColor:'#F97316',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false},
+        {label:'Meta 80%',data:[{x:0,y:80},{x:maxX,y:80}],type:'line',borderColor:'#10B981',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{cornerRadius:10,callbacks:{label:ctx=>{if(ctx.datasetIndex===0){const p=pts[ctx.dataIndex];return[p.nm,`Inscritos: ${p.x}  ·  Tasa: ${p.y}%`];}return[];}}}},
+        scales:{
+          x:{title:{display:true,text:'Inscritos',color:tick,font:{family:fontFamily,size:11,weight:'700'}},grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}}},
+          y:{title:{display:true,text:'Tasa %',color:tick,font:{family:fontFamily,size:11,weight:'700'}},grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}},min:0,max:105}
+        }}
+    });
+    return()=>killChart(chR);
+  },[byTaller,dark]);
+  if(!byTaller.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin datos</p>;
+  return <div style={{position:'relative',height:300}}><canvas ref={canR}/></div>;
+};
+
+/* ── INFO TIP ──────────────────────── */
+const InfoTip=({text})=>{
+  const[open,setOpen]=useState(false);const ref=useRef(null);
+  useEffect(()=>{if(!open)return;const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[open]);
+  return(
+    <span ref={ref} style={{position:'relative',display:'inline-flex',flexShrink:0,marginLeft:6,verticalAlign:'middle'}}>
+      <button onClick={e=>{e.stopPropagation();setOpen(p=>!p);}} style={{width:17,height:17,borderRadius:'50%',border:'1.5px solid currentColor',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,opacity:open?1:.45,color:'currentColor',transition:'opacity .2s',background:'transparent'}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>{if(!open)e.currentTarget.style.opacity=.45;}}>?</button>
+      {open&&(<span className="infoTooltipOpen" style={{position:'absolute',bottom:'140%',left:'50%',transform:'translateX(-50%)',width:220,padding:'10px 13px',background:'#0F1629',color:'#fff',fontSize:11,borderRadius:11,boxShadow:'0 8px 30px rgba(0,0,0,.35)',border:'1px solid rgba(255,255,255,.08)',zIndex:9999,lineHeight:1.55,fontFamily:'inherit',fontWeight:500}}>{text}<span style={{position:'absolute',top:'100%',left:'50%',transform:'translateX(-50%)',border:'5px solid transparent',borderTopColor:'#0F1629'}}/></span>)}
+    </span>
+  );
+};
+
+/* ── DROPDOWN ──────────────────────── */
+const DD=({label,options,selected,onToggle,onClear})=>{
+  const[open,setOpen]=useState(false);const ref=useRef(null);
+  useEffect(()=>{const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
+  const none=selected.length===0;
+  const lbl=label.toLowerCase();
+  const gender=lbl==='talleres'?'Todos los':'Todas las';
+  const allBtnText=lbl==='talleres'?'Todos':'Todas';
+  const disp=none?`${gender} ${lbl}`:selected.length===1?selected[0]:`${selected.length} ${lbl}`;
+  return(
+    <div ref={ref} style={{position:'relative'}}>
+      <button onClick={()=>{sfx();setOpen(p=>!p);}} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',background:'var(--inp)',border:'1px solid var(--brd)',borderRadius:10,fontSize:13,fontWeight:700,color:'var(--t1)',minWidth:175,justifyContent:'space-between',fontFamily:'inherit',boxShadow:'0 1px 4px rgba(0,0,0,.06)'}}>
+        <span className="trunc" style={{maxWidth:190}}>{disp}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="var(--t3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,transform:open?'rotate(180deg)':'none',transition:'transform .2s'}}><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {open&&(<div className="ddMenu">
+        <div style={{display:'flex',gap:6,padding:'8px 10px',borderBottom:'1px solid var(--brd)'}}>
+          <button onClick={()=>{options.forEach(o=>{if(!selected.includes(o))onToggle(o);});sfx();}} style={{flex:1,padding:'5px 0',fontSize:11,fontWeight:800,background:'#0F1629',color:'#FBBF24',borderRadius:7,fontFamily:'inherit'}}>{allBtnText}</button>
+          <button onClick={()=>{onClear();sfx();}} disabled={none} style={{flex:1,padding:'5px 0',fontSize:11,fontWeight:800,background:'var(--brd)',color:'var(--t2)',borderRadius:7,fontFamily:'inherit',opacity:none?.4:1}}>Limpiar</button>
+        </div>
+        {options.map(opt=>(
+          <button key={opt} onClick={()=>{onToggle(opt);sfx();}} style={{width:'100%',textAlign:'left',padding:'8px 14px',fontSize:13,fontWeight:selected.includes(opt)?800:600,display:'flex',alignItems:'center',gap:8,fontFamily:'inherit',background:selected.includes(opt)?'rgba(251,191,36,.1)':'transparent',color:'var(--t1)',transition:'background .15s'}}>
+            <span style={{width:13,height:13,borderRadius:4,border:'1.5px solid',borderColor:selected.includes(opt)?C.y:'var(--t3)',background:selected.includes(opt)?C.y:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              {selected.includes(opt)&&(<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0F1629" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>)}
+            </span>
+            <span className="trunc" style={{maxWidth:170}}>{opt}</span>
+          </button>
+        ))}
+      </div>)}
+    </div>
+  );
+};
+
+/* ── SECTION HEADER ────────────────── */
+const SH=({icon,title,sub,children})=>(
+  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,paddingBottom:16,borderBottom:'1px solid var(--brd)',marginBottom:20}}>
+    <div style={{display:'flex',alignItems:'center',gap:10}}>
+      <div style={{width:34,height:34,borderRadius:10,background:'rgba(251,191,36,.12)',display:'flex',alignItems:'center',justifyContent:'center'}}><Ico n={icon} size={17} color={C.y}/></div>
+      <div><p className="sTitle">{title}</p>{sub&&<p className="sSub">{sub}</p>}</div>
+    </div>
+    {children&&<div style={{display:'flex',gap:8,alignItems:'center'}}>{children}</div>}
+  </div>
+);
+
+/* ── KPI STRIP ─────────────────────── */
+const KpiStrip=({ins,apr,tasa})=>{
+  const cards=[
+    {lbl:'Total Inscritos',val:ins.toLocaleString(),sub:'Alumnos registrados',icon:'users',tip:'Total de alumnos según filtros activos.',bg:'linear-gradient(135deg,#1a2a52,#0F1629)',ib:'rgba(255,255,255,.1)',tc:'rgba(255,255,255,.75)',vc:'#fff'},
+    {lbl:'Aprobados',val:apr.toLocaleString(),sub:'Nota ≥ 70',icon:'award',tip:'Estudiantes con nota ≥ 70.',bg:'linear-gradient(135deg,#FBBF24,#D97706)',ib:'rgba(0,0,0,.14)',tc:'rgba(0,0,0,.65)',vc:'#000'},
+    {lbl:'Tasa de Aprobación',val:`${tasa}%`,sub:'Aprobados vs inscritos',icon:'trend',tip:'Porcentaje de alumnos que aprobaron.',bg:tasa>=80?'linear-gradient(135deg,#10B981,#059669)':tasa>=60?'linear-gradient(135deg,#F97316,#EA580C)':'linear-gradient(135deg,#EF4444,#DC2626)',ib:'rgba(255,255,255,.2)',tc:'rgba(255,255,255,.8)',vc:'#fff'},
+  ];
+  return(
+    <div className="kpiG">
+      {cards.map((k,i)=>(
+        <div key={i} className="kpiCard fadeUp" style={{background:k.bg,animationDelay:`${i*.08}s`,boxShadow:'0 8px 28px rgba(0,0,0,.18)'}}>
+          <div style={{position:'absolute',inset:0,borderRadius:'inherit',overflow:'hidden',pointerEvents:'none'}}>
+            <div style={{position:'absolute',top:-25,right:-25,width:90,height:90,borderRadius:'50%',background:'rgba(255,255,255,.06)'}}/>
+          </div>
+          <div style={{display:'flex',alignItems:'flex-start',gap:14,position:'relative'}}>
+            <div style={{padding:10,background:k.ib,borderRadius:13,flexShrink:0}}><Ico n={k.icon} size={22} color={k.vc}/></div>
+            <div style={{flex:1}}>
+              <p style={{fontSize:11,fontWeight:800,color:k.tc,textTransform:'uppercase',letterSpacing:'.08em',display:'flex',alignItems:'center'}}>{k.lbl}<InfoTip text={k.tip}/></p>
+              <p style={{fontSize:38,fontWeight:900,color:k.vc,lineHeight:1,marginTop:5}}>{k.val}</p>
+              <p style={{fontSize:11,color:k.tc,fontWeight:600,marginTop:5}}>{k.sub}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ── RANKING TABLE ─────────────────── */
+const RankTable=({data})=>{
+  const[sk,setSk]=useState('Inscritos');const[asc,setAsc]=useState(false);
+  const sorted=useMemo(()=>[...data].sort((a,b)=>asc?a[sk]-b[sk]:b[sk]-a[sk]),[data,sk,asc]);
+  const hs=k=>{sfx();k===sk?setAsc(p=>!p):(setSk(k),setAsc(false));};
+  const exp=()=>{const rows=[['#','Taller','Inscritos','Aprobados','Sesiones','Tasa%'],...sorted.map((d,i)=>[i+1,`"${d.name}"`,d.Inscritos,d.Aprobados,d.Sesiones,d.Inscritos>0?(d.Aprobados/d.Inscritos*100).toFixed(1):0])];const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ranking_talleres.csv';a.click();};
+  const cols=[{k:'Inscritos',l:'Inscr.'},{k:'Aprobados',l:'Aprobados'},{k:'Sesiones',l:'Sesiones'}];
+  const th={padding:'10px 16px',fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--t3)',userSelect:'none'};
+  return(
+    <>
+      <SH icon="trophy" title="Ranking de Talleres" sub="Clic en columnas para ordenar"><button onClick={exp} className="btnG"><Ico n="download" size={13}/>CSV</button></SH>
+      <div style={{overflowX:'auto',borderRadius:12,border:'1px solid var(--brd)'}}>
+        <table><thead><tr style={{background:'var(--brd)'}}>
+          <th style={{...th,width:36}}>#</th><th style={th}>Taller</th>
+          {cols.map(col=>(
+            <th key={col.k} style={{...th,textAlign:'right',cursor:'pointer',color:sk===col.k?C.y:'var(--t3)'}} onClick={()=>hs(col.k)}>
+              <span style={{display:'inline-flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>{col.l}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={sk===col.k?C.y:'var(--t3)'} strokeWidth="2" strokeLinecap="round">
+                  {sk===col.k&&asc?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
+                </svg>
+              </span>
+            </th>
+          ))}
+          <th style={{...th,textAlign:'right'}}>Tasa</th>
+        </tr></thead>
+        <tbody>
+          {sorted.map((d,i)=>{const t=d.Inscritos>0?(d.Aprobados/d.Inscritos*100).toFixed(1):0;const bc=t>=80?'bGood':t>=60?'bWarn':'bCrit';const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;return(
+            <tr key={d.name} style={{borderBottom:'1px solid var(--brd)',background:i===0?'rgba(251,191,36,.05)':'transparent'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(251,191,36,.04)'} onMouseLeave={e=>e.currentTarget.style.background=i===0?'rgba(251,191,36,.05)':'transparent'}>
+              <td style={{padding:'12px 16px',fontSize:13,fontWeight:900,color:'var(--t3)'}}>{med}</td>
+              <td style={{padding:'12px 16px',fontWeight:700,color:'var(--t1)',maxWidth:230,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.name}</td>
+              <td style={{padding:'12px 16px',fontWeight:800,color:'var(--t1)',textAlign:'right'}}>{d.Inscritos}</td>
+              <td style={{padding:'12px 16px',fontWeight:800,color:C.y,textAlign:'right'}}>{d.Aprobados}</td>
+              <td style={{padding:'12px 16px',color:'var(--t2)',textAlign:'right'}}>{d.Sesiones}</td>
+              <td style={{padding:'12px 16px',textAlign:'right'}}><span className={`badge ${bc}`}>{t}%</span></td>
+            </tr>
+          );})}
+          {!sorted.length&&<tr><td colSpan={6} style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>Sin datos</td></tr>}
+        </tbody></table>
+      </div>
+    </>
+  );
+};
+
+/* ── ALERTS PANEL ──────────────────── */
+const AlertsPanel=({byTaller})=>{
+  const al=useMemo(()=>byTaller.filter(d=>d.Inscritos>0&&(d.Aprobados/d.Inscritos*100)<60).map(d=>({...d,tasa:+(d.Aprobados/d.Inscritos*100).toFixed(1)})).sort((a,b)=>a.tasa-b.tasa),[byTaller]);
+  if(!al.length) return(<div style={{textAlign:'center',padding:'52px 24px'}}><div style={{fontSize:52,marginBottom:14}}>✅</div><p style={{fontWeight:900,fontSize:16,color:'var(--t1)',marginBottom:6}}>¡Sin alertas!</p><p style={{fontSize:13,color:'var(--t3)'}}>Todos los talleres tienen tasa ≥ 60%</p></div>);
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <p style={{fontSize:12,color:'var(--t3)',fontWeight:600,marginBottom:4}}>{al.length} taller{al.length!==1?'es':''} bajo el umbral mínimo del 60%</p>
+      {al.map((d,i)=>{const crit=d.tasa<40;return(
+        <div key={d.name} className="fadeUp" style={{animationDelay:`${i*.05}s`,display:'flex',alignItems:'center',gap:14,padding:'16px 18px',borderRadius:13,border:'1px solid',borderColor:crit?'rgba(239,68,68,.25)':'rgba(249,115,22,.25)',background:crit?'rgba(239,68,68,.05)':'rgba(249,115,22,.05)'}}>
+          <div style={{width:44,height:44,borderRadius:12,flexShrink:0,background:crit?'rgba(239,68,68,.12)':'rgba(249,115,22,.12)',display:'flex',alignItems:'center',justifyContent:'center'}}><Ico n="alert" size={21} color={crit?C.r:C.o}/></div>
+          <div style={{flex:1,minWidth:0}}><p style={{fontWeight:800,fontSize:14,color:'var(--t1)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.name}</p><p style={{fontSize:12,color:'var(--t3)',marginTop:3}}>{d.Aprobados} aprobados de {d.Inscritos} inscritos · {d.Sesiones} sesión{d.Sesiones!==1?'es':''}</p></div>
+          <div style={{textAlign:'right',flexShrink:0}}><p style={{fontSize:26,fontWeight:900,lineHeight:1,color:crit?C.r:C.o}}>{d.tasa}%</p><span className={`badge ${crit?'bCrit':'bWarn'}`} style={{display:'inline-block',marginTop:5}}>{crit?'Crítico':'Moderado'}</span></div>
+        </div>
+      );})}
+    </div>
+  );
+};
+
+/* ── PIVOT TABLE ───────────────────── */
+const PivotTable=({fData})=>{
+  const[path,setPath]=useState([]);
+  const LEVELS=['sede','escuela','carrera','taller'];const LBLS={sede:'Sede',escuela:'Escuela',carrera:'Carrera',taller:'Taller'};const ICONS={sede:'pin',escuela:'bld',carrera:'book',taller:'bar'};
+  const cur=LEVELS[path.length]||'taller';
+  const base=useMemo(()=>{let d=fData;path.forEach(({lv,nm})=>{d=d.filter(r=>r[lv]===nm);});return d;},[fData,path]);
+  const groups=useMemo(()=>{const acc={};base.forEach(d=>{const k=d[cur]||'Desconocido';if(!acc[k])acc[k]={name:k,Inscritos:0,Aprobados:0};acc[k].Inscritos++;if(d.aprobo)acc[k].Aprobados++;});return Object.values(acc).sort((a,b)=>b.Inscritos-a.Inscritos);},[base,cur]);
+  const drill=nm=>{if(cur==='taller')return;sfx();setPath(p=>[...p,{lv:cur,nm}]);};
+  const goTo=idx=>{sfx();setPath(p=>p.slice(0,idx));};
+  const th={padding:'10px 16px',fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--t3)'};
+  return(
+    <>
+      <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',marginBottom:16,fontSize:13}}>
+        <button onClick={()=>goTo(0)} style={{fontWeight:path.length?700:900,color:path.length?C.y:'var(--t1)',fontFamily:'inherit',fontSize:13}}>Sedes</button>
+        {path.map((p,i)=>(<React.Fragment key={i}><span style={{color:'var(--t3)'}}>›</span><button onClick={()=>goTo(i+1)} style={{fontWeight:i<path.length-1?700:900,color:i<path.length-1?C.y:'var(--t1)',fontFamily:'inherit',fontSize:13}}>{p.nm}</button></React.Fragment>))}
+      </div>
+      <div style={{marginBottom:14}}><span style={{display:'inline-flex',alignItems:'center',gap:7,padding:'5px 13px',background:'rgba(251,191,36,.12)',color:C.y,borderRadius:20,fontSize:11,fontWeight:800}}><Ico n={ICONS[cur]} size={12} color={C.y}/>{LBLS[cur]}{cur!=='taller'&&<span style={{opacity:.65,fontWeight:600}}>— clic para profundizar</span>}</span></div>
+      <div style={{overflowX:'auto',borderRadius:12,border:'1px solid var(--brd)'}}>
+        <table><thead><tr style={{background:'var(--brd)'}}>
+          <th style={th}>{LBLS[cur]}</th><th style={{...th,textAlign:'right'}}>Inscritos</th><th style={{...th,textAlign:'right'}}>Aprobados</th><th style={{...th,textAlign:'right'}}>Tasa</th>
+          {cur!=='taller'&&<th style={{...th,textAlign:'center'}}>Detalle</th>}
+        </tr></thead>
+        <tbody>
+          {groups.map(g=>{const t=g.Inscritos>0?(g.Aprobados/g.Inscritos*100).toFixed(1):0;const bc=t>=80?'bGood':t>=60?'bWarn':'bCrit';return(
+            <tr key={g.name} className="pivRow" style={{cursor:cur!=='taller'?'pointer':'default'}} onClick={()=>drill(g.name)}>
+              <td style={{padding:'12px 16px',fontWeight:700,color:'var(--t1)',maxWidth:260,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{g.name}</td>
+              <td style={{padding:'12px 16px',textAlign:'right',fontWeight:800,color:'var(--t1)'}}>{g.Inscritos}</td>
+              <td style={{padding:'12px 16px',textAlign:'right',fontWeight:800,color:C.y}}>{g.Aprobados}</td>
+              <td style={{padding:'12px 16px',textAlign:'right'}}><span className={`badge ${bc}`}>{t}%</span></td>
+              {cur!=='taller'&&<td style={{padding:'12px 16px',textAlign:'center',color:C.y,fontWeight:800,fontSize:13}}>→</td>}
+            </tr>
+          );})}
+          {!groups.length&&<tr><td colSpan={5} style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>Sin datos</td></tr>}
+        </tbody></table>
+      </div>
+    </>
+  );
+};
+
+/* ── HEATMAP ───────────────────────── */
+const Heatmap=({fData,dark,metric='Inscritos'})=>{
+  const{talleres,fechas,matrix,maxVal}=useMemo(()=>{const acc={};fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).forEach(d=>{if(!acc[d.taller])acc[d.taller]={};const val=metric==='Aprobados'?(d.aprobo?1:0):1;acc[d.taller][d.fecha]=(acc[d.taller][d.fecha]||0)+val;});const talleres=[...new Set(fData.map(d=>d.taller))].slice(0,12);const fechas=[...new Set(fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).map(d=>d.fecha))].sort().slice(0,20);const matrix=talleres.map(t=>fechas.map(f=>acc[t]?.[f]||0));return{talleres,fechas,matrix,maxVal:Math.max(...matrix.flat(),1)};},[fData,metric]);
+  if(!talleres.length||!fechas.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin fechas disponibles para el mapa de calor</p>;
+  const gc=v=>{const t=v/maxVal;if(t===0)return 'var(--brd)';return dark ? `rgba(251,191,36,${0.12+t*0.8})` : `rgba(217,119,6,${0.1+t*0.85})`;};
+  const CW=Math.max(28,Math.min(50,Math.floor(660/fechas.length))),CH=38;
+  return(
+    <div style={{overflowX:'auto',paddingBottom:12}}>
+      <div style={{display:'grid',gridTemplateColumns:`155px repeat(${fechas.length},${CW}px)`,gap:4,minWidth:300}}>
+        <div/>
+        {fechas.map(f=>(<div key={f} style={{fontSize:9,fontWeight:700,color:'var(--t3)',height:CH,display:'flex',alignItems:'flex-end',justifyContent:'center',paddingBottom:4,overflow:'hidden',transform:'rotate(-45deg)',transformOrigin:'center bottom'}}>{f.slice(3,8)}</div>))}
+        {talleres.map((t,ti)=>(<React.Fragment key={t}>
+          <div style={{fontSize:11,fontWeight:700,color:'var(--t1)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',height:CH,paddingRight:8}}>{t.length>22?t.slice(0,21)+'…':t}</div>
+          {fechas.map((f,fi)=>{const v=matrix[ti][fi];const tc=dark ? (v > maxVal*0.5 ? '#0F1629' : '#FFFFFF') : (v > maxVal*0.5 ? '#FFFFFF' : '#0F1629');return(<div key={f} className="hCell" title={`${t} · ${f}: ${v} ${metric.toLowerCase()}`} style={{height:CH,background:gc(v),display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:tc}}>{v>0?v:''}</div>);})}
+        </React.Fragment>))}
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:7,marginTop:20,justifyContent:'flex-end',paddingRight:12}}>
+        <span style={{fontSize:11,color:'var(--t3)',fontWeight:700}}>Menos</span>
+        {[0,.25,.5,.75,1].map(v=>(<div key={v} style={{width:20,height:20,borderRadius:5,background:gc(v*maxVal||0)}}/>))}
+        <span style={{fontSize:11,color:'var(--t3)',fontWeight:700}}>Más</span>
+      </div>
+    </div>
+  );
+};
+
+/* ── DETAIL MODAL ──────────────────── */
+const Modal=({modal,fData,onClose})=>{
+  const{tipo,nombre}=modal;
+  const rows=useMemo(()=>{if(tipo==='sede')return fData.filter(d=>d.sede===nombre);if(tipo==='escuela')return fData.filter(d=>!d.esDocente&&d.escuela===nombre);if(tipo==='carrera')return fData.filter(d=>!d.esDocente&&d.carrera===nombre);return[];},[fData,tipo,nombre]);
+  
+  const byS=useMemo(()=>{
+    const acc={};
+    rows.forEach(d=>{
+      if(!acc[d.sede])acc[d.sede]={name:d.sede,Inscritos:0,Aprobados:0};
+      acc[d.sede].Inscritos++;
+      if(d.aprobo)acc[d.sede].Aprobados++;
+    });
+    return Object.values(acc).sort((a,b)=>b.Inscritos-a.Inscritos);
+  },[rows]);
+
+  const byT=useMemo(()=>{
+    const acc={};
+    rows.forEach(d=>{
+      if(!acc[d.taller])acc[d.taller]={name:d.taller,Inscritos:0,Aprobados:0};
+      acc[d.taller].Inscritos++;
+      if(d.aprobo)acc[d.taller].Aprobados++;
+    });
+    return Object.values(acc).sort((a,b)=>b.Inscritos-a.Inscritos);
+  },[rows]);
+
+  const total=rows.length,apr=rows.filter(d=>d.aprobo).length,tasa=total>0?((apr/total)*100).toFixed(1):0;
+  const lbl={sede:'Sede',escuela:'Escuela',carrera:'Carrera'}[tipo]||tipo;
+  
+  useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose();};window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);},[onClose]);
+  
+  return(
+    <div className="mBack" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="mBox">
+        <div style={{background:'linear-gradient(135deg,#0F1629,#1E3A5F)',padding:'20px 24px',display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12}}>
+          <div><p style={{fontSize:11,fontWeight:800,color:C.y,textTransform:'uppercase',letterSpacing:'.1em',marginBottom:5}}>{lbl}</p><h2 style={{fontSize:17,fontWeight:900,color:'#fff',lineHeight:1.25}}>{nombre}</h2></div>
+          <button onClick={onClose} className="btnI" style={{background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.6)',border:'none',marginTop:2,flexShrink:0}}><Ico n="x" size={17}/></button>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',borderBottom:'1px solid var(--brd)'}}>
+          {[{l:'Inscritos',v:total,c:'var(--t1)'},{l:'Aprobados',v:apr,c:C.y},{l:'Tasa',v:`${tasa}%`,c:tasa>=80?C.g:tasa>=60?C.o:C.r}].map(k=>(
+            <div key={k.l} style={{padding:'16px',textAlign:'center',borderRight:'1px solid var(--brd)'}}>
+              <p style={{fontSize:28,fontWeight:900,color:k.c}}>{k.v}</p>
+              <p style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.05em',marginTop:4}}>{k.l}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1,overflowY:'auto',padding:'16px 20px',display:'flex',flexDirection:'column',gap:20}}>
+          {(tipo==='escuela'||tipo==='carrera')&&(
+            <div>
+              <p style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:8}}>Participación por Sede</p>
+              <div style={{borderRadius:12,border:'1px solid var(--brd)',overflow:'hidden'}}>
+                <table><thead style={{background:'var(--solid)'}}><tr style={{borderBottom:'1px solid var(--brd)'}}>
+                  {['Sede','Ins.','Apr.'].map((h,i)=>(<th key={h} style={{padding:'8px 14px',fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.05em',textAlign:i>0?'right':'left'}}>{h}</th>))}
+                </tr></thead>
+                <tbody>
+                  {byS.map(d=>{const tf=d.Inscritos>0?((d.Aprobados/d.Inscritos)*100).toFixed(0):0;return(
+                    <tr key={d.name} style={{borderBottom:'1px solid var(--brd)'}}>
+                      <td style={{padding:'9px 14px',fontWeight:700,color:'var(--t1)',fontSize:12}}>{d.name}</td>
+                      <td style={{padding:'9px 14px',textAlign:'right',fontWeight:800,color:'var(--t1)',fontSize:12}}>{d.Inscritos}</td>
+                      <td style={{padding:'9px 14px',textAlign:'right',fontSize:12}}><span style={{fontWeight:800,color:C.y}}>{d.Aprobados}</span><span style={{fontSize:11,color:'var(--t3)',marginLeft:4}}>({tf}%)</span></td>
+                    </tr>
+                  );})}
+                </tbody></table>
+              </div>
+            </div>
+          )}
+          <div>
+            <p style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:8}}>
+              {tipo==='sede'?'Desglose de Talleres':'Participación por Taller'}
+            </p>
+            <div style={{borderRadius:12,border:'1px solid var(--brd)',overflow:'hidden'}}>
+              <table><thead style={{background:'var(--solid)'}}><tr style={{borderBottom:'1px solid var(--brd)'}}>
+                {['Taller','Ins.','Apr.'].map((h,i)=>(<th key={h} style={{padding:'8px 14px',fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.05em',textAlign:i>0?'right':'left'}}>{h}</th>))}
+              </tr></thead>
+              <tbody>
+                {byT.map(d=>{const tf=d.Inscritos>0?((d.Aprobados/d.Inscritos)*100).toFixed(0):0;return(
+                  <tr key={d.name} style={{borderBottom:'1px solid var(--brd)'}}>
+                    <td style={{padding:'9px 14px',fontWeight:700,color:'var(--t1)',fontSize:12,maxWidth:320,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={d.name}>{d.name}</td>
+                    <td style={{padding:'9px 14px',textAlign:'right',fontWeight:800,color:'var(--t1)',fontSize:12}}>{d.Inscritos}</td>
+                    <td style={{padding:'9px 14px',textAlign:'right',fontSize:12}}><span style={{fontWeight:800,color:C.y}}>{d.Aprobados}</span><span style={{fontSize:11,color:'var(--t3)',marginLeft:4}}>({tf}%)</span></td>
+                  </tr>
+                );})}
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+        <div style={{padding:'11px 16px',borderTop:'1px solid var(--brd)',background:'var(--brd)'}}>
+          <p style={{fontSize:11,color:'var(--t3)',fontWeight:600}}>
+            {tipo==='sede'?`${byT.length} talleres`:`${byS.length} sedes · ${byT.length} talleres`} · Esc para cerrar
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── UPLOAD SCREEN ─────────────────── */
+const Upload=({onData,err,setErr,dark,toggleDark})=>{
+  const[drag,setDrag]=useState(false);const[mes,setMes]=useState('');
+  const go=(file,m)=>{if(/\.xlsx?$/.test(file.name)){setErr('Guarda el Excel como CSV primero.');return;}const r=new FileReader();r.onload=ev=>onData(ev.target.result,m);r.readAsText(file,'ISO-8859-1');};
+  const drop=e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(!f)return;const det=detectMes(f.name)||mes;if(!det){setErr(`No se detectó el mes en "${f.name}". Selecciónalo abajo.`);return;}go(f,det);};
+  const pick=e=>{const f=e.target.files[0];if(!f)return;const det=detectMes(f.name)||mes;if(!det){setErr('No se detectó el mes. Selecciónalo manualmente.');e.target.value=null;return;}go(f,det);e.target.value=null;};
+  return(
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:'var(--bg)',fontFamily:'inherit',position:'relative'}} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={drop}>
+      <button onClick={toggleDark} className="btnI" style={{position:'fixed',top:20,right:20,zIndex:100}}><Ico n={dark?'sun':'moon'} size={17}/></button>
+      {drag&&(<div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(8,13,26,.92)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,pointerEvents:'none'}}><span style={{fontSize:60}}>📂</span><p style={{color:'#fff',fontWeight:900,fontSize:22}}>Suelta el archivo CSV</p><p style={{color:'rgba(255,255,255,.5)',fontSize:14}}>El mes se detecta desde el nombre</p></div>)}
+      <div className="scPop" style={{background:'var(--gb)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',border:'1px solid var(--gbr)',borderRadius:26,boxShadow:'var(--shx)',padding:40,maxWidth:440,width:'100%',textAlign:'center',position:'relative'}}>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/3840px-Logo_DuocUC.svg.png" alt="Duoc UC" style={{height:38,objectFit:'contain',marginBottom:20}}/>
+        <h1 style={{fontSize:22,fontWeight:900,color:'var(--t1)',marginBottom:6}}>Monitor de Talleres</h1>
+        <p style={{fontSize:13,color:'var(--t3)',lineHeight:1.65,marginBottom:28}}>Área Formativa · Bibliotecas Duoc UC</p>
+        <label style={{display:'block',cursor:'pointer',marginBottom:16}}>
+          <input type="file" accept=".csv" style={{display:'none'}} onChange={pick}/>
+          <div className={`uZone${drag?' on':''}`}>
+            <div style={{width:56,height:56,background:'linear-gradient(135deg,#FBBF24,#D97706)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',boxShadow:'0 5px 20px rgba(251,191,36,.4)'}}><Ico n="upload" size={26} color="#0F172A"/></div>
+            <p style={{fontWeight:800,fontSize:15,color:'var(--t1)',marginBottom:5}}>Arrastra o haz clic para subir</p>
+            <p style={{fontSize:12,color:'var(--t3)',marginBottom:12}}>Solo archivos CSV</p>
+            <span style={{fontSize:11,background:'var(--brd)',padding:'5px 13px',borderRadius:20,color:'var(--t2)',fontWeight:600}}>Ej: <b>asistencia_abril.csv</b> — mes auto-detectado</span>
+          </div>
+        </label>
+        <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',background:'var(--brd)',borderRadius:13,marginBottom:14}}>
+          <span style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em',whiteSpace:'nowrap'}}>Mes manual:</span>
+          <select value={mes} onChange={e=>{sfx();setMes(e.target.value);}} style={{flex:1}}>
+            <option value="" disabled>Solo si no se detecta</option>
+            {MESES.map(m=><option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        {err&&(<div style={{display:'flex',gap:10,padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',borderRadius:12,color:C.r,fontSize:13,fontWeight:600,textAlign:'left'}}><Ico n="alert" size={16} style={{flexShrink:0,marginTop:1}}/>{err}</div>)}
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════ APP ════════════════ */
+function App(){
+  const[dark,setDark]=useState(()=>localStorage.getItem('duoc_theme')==='dark');
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',dark?'dark':'light');localStorage.setItem('duoc_theme',dark?'dark':'light');},[dark]);
+  const toggleDark=()=>{sfx();setDark(p=>!p);};
+
+  const[ds,setDs]=useState({});const[err,setErr]=useState(null);
+  const[mNuevo,setMN]=useState('');const[sM,setSM]=useState([]);const[sS,setSS]=useState([]);
+  const[sT,setST]=useState([]);const[fecha,setFecha]=useState('Todas');
+  const[modal,setModal]=useState(null);const[tab,setTab]=useState('resumen');const[drag,setDrag]=useState(false);
+  const[heatMetric,setHeatMetric]=useState('Inscritos');
+  const[loadingPreload,setLoadingPreload]=useState(true);
+
+  const meses=Object.keys(ds).sort((a,b)=>MESES.indexOf(a)-MESES.indexOf(b));
+  const loaded=meses.length>0;
+  const raw=useMemo(()=>Object.values(ds).flat(),[ds]);
+
+  const parseRows=(txt,key)=>{
+    const{headers,data}=parseCSV(txt);
+    const cK=headers.find(h=>/calificacion|nota|puntaje/.test(san(h)));
+    const fK=headers.find(h=>{const s=san(h);if(/acceso|nacimiento|rut|^id$|estudiante|alumno/.test(s))return false;return /fecha|dia/.test(s);});
+    const tK=[...headers].reverse().find(h=>{const s=san(h);if(/rut|^id$|correo|email|fecha/.test(s))return false;return /taller|curso|^nombre/.test(s);});
+    const sK=headers.find(h=>/^sede$/.test(san(h)));const eK=headers.find(h=>/^escuela$/.test(san(h)));const carK=headers.find(h=>/^carrera$/.test(san(h)));
+    if(!cK||!tK||!fK) throw new Error(`Columnas no reconocidas. Detectadas: ${headers.join(' | ')}`);
+    return data.map(row=>{
+      const n=toNum(row[cK]);
+      const sed=sK?((row[sK]||'').trim()||'Desconocida'):'Sin datos';
+      const esc=eK?((row[eK]||'').trim()||'Desconocida'):'Sin datos';
+      const car=carK?((row[carK]||'').trim()||'Desconocida'):'Sin datos';
+      return{mes:key,taller:(row[tK]||'Desconocido').toString().trim(),fecha:normD((row[fK]||'').toString().trim()),aprobo:n!==null&&n>=70,sede:sed,escuela:esc,carrera:car,esDocente:/docente/i.test(esc)||/docente/i.test(car)};
+    });
+  };
+
+  const process=(txt,key)=>{
+    try{
+      const rows=parseRows(txt,key);
+      setErr(null);
+      setDs(p=>({...p,[key]:rows}));setSM([key]);setSS([]);setST([]);setFecha('Todas');setMN('');sfx('ok');
+    }catch(e){console.error(e);setErr(`Error al procesar ${key}: ${e.message}`);}
+  };
+
+  useEffect(()=>{
+    const preloads=['Abril','Mayo'];
+    const loadedData={};
+    Promise.all(
+      preloads.map(m=>
+        fetch(`data/${m.toLowerCase()}.csv`)
+          .then(res=>{
+            if(!res.ok)throw new Error('Not found');
+            return res.arrayBuffer();
+          })
+          .then(buf=>{
+            const txt=new TextDecoder('iso-8859-1').decode(buf);
+            const rows=parseRows(txt,m);
+            if(rows&&rows.length) loadedData[m]=rows;
+          })
+          .catch(e=>console.log(`Preload omitido para ${m}:`,e))
+      )
+    ).then(()=>{
+      if(Object.keys(loadedData).length>0){
+        setDs(p=>({...p,...loadedData}));
+        setSM(Object.keys(loadedData));
+      }
+      setLoadingPreload(false);
+    });
+  },[]);
+
+  const onDrop=e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(!f)return;if(/\.xlsx?$/.test(f.name)){setErr('Guarda como CSV.');return;}const det=detectMes(f.name)||mNuevo;if(!det){setErr(`No se detectó mes en "${f.name}". Selecciónalo arriba.`);return;}const r=new FileReader();r.onload=ev=>process(ev.target.result,det);r.readAsText(f,'ISO-8859-1');};
+
+  const opS=useMemo(()=>{const b=sM.length?raw.filter(d=>sM.includes(d.mes)):raw;return[...new Set(b.map(d=>d.sede))].filter(s=>s&&s!=='Sin datos'&&s!=='Desconocida').sort();},[raw,sM]);
+  const opT=useMemo(()=>{let b=sM.length?raw.filter(d=>sM.includes(d.mes)):raw;if(sS.length)b=b.filter(d=>sS.includes(d.sede));return[...new Set(b.map(d=>d.taller))].filter(t=>t!=='Desconocido').sort();},[raw,sM,sS]);
+  const opF=useMemo(()=>{let b=raw;if(sM.length)b=b.filter(d=>sM.includes(d.mes));if(sS.length)b=b.filter(d=>sS.includes(d.sede));if(sT.length)b=b.filter(d=>sT.includes(d.taller));const fs=[...new Set(b.map(d=>d.fecha))].filter(f=>!['Sin fecha','Fecha Desconocida'].includes(f)).sort();return['Todas',...fs];},[raw,sM,sS,sT]);
+  const fData=useMemo(()=>raw.filter(d=>{const ok1=!sM.length||sM.includes(d.mes);const ok2=!sS.length||sS.includes(d.sede);const ok3=!sT.length||sT.includes(d.taller);const ok4=fecha==='Todas'||d.fecha===fecha;return ok1&&ok2&&ok3&&ok4;}),[raw,sM,sS,sT,fecha]);
+  const togM=m=>{sfx();setSM(m==='Todos'?[]:p=>p.includes(m)?p.filter(x=>x!==m):[...p,m]);setFecha('Todas');};
+
+  const stats=useMemo(()=>{const ins=fData.length,apr=fData.filter(d=>d.aprobo).length;return{ins,apr,tasa:ins>0?+((apr/ins)*100).toFixed(1):0};},[fData]);
+  const byDate=useMemo(()=>{const acc={};fData.forEach(d=>{if(['Fecha Desconocida','Sin fecha'].includes(d.fecha))return;if(!acc[d.fecha])acc[d.fecha]={f:d.fecha,Inscritos:0,Aprobados:0,talleres:new Set()};acc[d.fecha].Inscritos++;if(d.aprobo)acc[d.fecha].Aprobados++;if(d.taller)acc[d.fecha].talleres.add(d.taller);});return Object.values(acc).map(d=>({...d,label:fmtD(d.f),talleresList:Array.from(d.talleres)})).sort((a,b)=>a.f.localeCompare(b.f));},[fData]);
+  const byTaller=useMemo(()=>{const acc={};fData.forEach(d=>{if(!acc[d.taller])acc[d.taller]={name:d.taller,Inscritos:0,Aprobados:0,_f:new Set()};acc[d.taller].Inscritos++;if(d.aprobo)acc[d.taller].Aprobados++;if(!['Fecha Desconocida','Sin fecha'].includes(d.fecha))acc[d.taller]._f.add(d.fecha);});return Object.values(acc).map(d=>({name:d.name,Inscritos:d.Inscritos,Aprobados:d.Aprobados,Sesiones:d._f.size||1})).sort((a,b)=>b.Inscritos-a.Inscritos);},[fData]);
+  const byMes=useMemo(()=>{
+    const acc={};
+    fData.forEach(d=>{
+      if(!acc[d.mes])acc[d.mes]={name:d.mes,Inscritos:0,Aprobados:0,_f:new Set()};
+      acc[d.mes].Inscritos++;
+      if(d.aprobo)acc[d.mes].Aprobados++;
+      if(!['Fecha Desconocida','Sin fecha'].includes(d.fecha))acc[d.mes]._f.add(d.fecha);
+    });
+    return Object.values(acc).map(d=>({name:d.name,Inscritos:d.Inscritos,Aprobados:d.Aprobados,Sesiones:d._f.size||1})).sort((a,b)=>MESES.indexOf(a.name)-MESES.indexOf(b.name));
+  },[fData]);
+  const bySede=useMemo(()=>{const acc={};fData.filter(d=>d.sede!=='Desconocida'&&d.sede!=='Sin datos').forEach(d=>{if(!acc[d.sede])acc[d.sede]={name:d.sede,Inscritos:0,Aprobados:0};acc[d.sede].Inscritos++;if(d.aprobo)acc[d.sede].Aprobados++;});return Object.values(acc).sort((a,b)=>b.Inscritos-a.Inscritos);},[fData]);
+  const byEsc=useMemo(()=>{const acc={};fData.filter(d=>!d.esDocente&&d.escuela!=='Desconocida'&&d.escuela!=='Sin datos').forEach(d=>{if(!acc[d.escuela])acc[d.escuela]={name:d.escuela,Inscritos:0,Aprobados:0};acc[d.escuela].Inscritos++;if(d.aprobo)acc[d.escuela].Aprobados++;});return Object.values(acc).sort((a,b)=>b.Inscritos-a.Inscritos).slice(0,15);},[fData]);
+  const byCar=useMemo(()=>{const acc={};fData.filter(d=>!d.esDocente&&d.carrera!=='Desconocida'&&d.carrera!=='Sin datos').forEach(d=>{if(!acc[d.carrera])acc[d.carrera]={name:d.carrera,Inscritos:0,Aprobados:0};acc[d.carrera].Inscritos++;if(d.aprobo)acc[d.carrera].Aprobados++;});return Object.values(acc).sort((a,b)=>b.Inscritos-a.Inscritos).slice(0,15);},[fData]);
+  const byDoc=useMemo(()=>{const acc={};fData.filter(d=>d.esDocente&&d.sede!=='Desconocida'&&d.sede!=='Sin datos').forEach(d=>{if(!acc[d.sede])acc[d.sede]={name:d.sede,Inscritos:0,Aprobados:0};acc[d.sede].Inscritos++;if(d.aprobo)acc[d.sede].Aprobados++;});return Object.values(acc).sort((a,b)=>b.Inscritos-a.Inscritos);},[fData]);
+  const alertCt=useMemo(()=>byTaller.filter(d=>d.Inscritos>0&&(d.Aprobados/d.Inscritos*100)<60).length,[byTaller]);
+
+  const exportPDF=async()=>{const el=document.getElementById('dash');if(!el||!window.html2canvas||!window.jspdf){alert('Librerías PDF no disponibles aún.');return;}sfx();const canvas=await window.html2canvas(el,{scale:1.4,useCORS:true,backgroundColor:dark?'#080D1A':'#EEF0F5',logging:false});const{jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});const pW=pdf.internal.pageSize.getWidth(),pH=pdf.internal.pageSize.getHeight();const ratio=Math.min(pW/canvas.width,pH/canvas.height);pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,canvas.width*ratio,canvas.height*ratio);pdf.save(`monitor_talleres_${new Date().toISOString().slice(0,10)}.pdf`);sfx('ok');};
+
+  const TABS=[{id:'resumen',lbl:'Resumen',icon:'bar'},{id:'sedes',lbl:'Sedes',icon:'pin'},{id:'comparar',lbl:'Comparación',icon:'compare'},{id:'pivot',lbl:'Tabla Matriz',icon:'pivot'},{id:'alertas',lbl:'Alertas',icon:'alert',badge:alertCt||null}];
+
+  if(loadingPreload){
+    return(
+      <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,background:'var(--bg)',color:'var(--t1)'}}>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/3840px-Logo_DuocUC.svg.png" alt="Duoc UC" style={{height:36,objectFit:'contain'}}/>
+        <div className="_spin"></div>
+        <p style={{fontWeight:700,fontSize:14,color:'var(--t2)'}}>Buscando datos históricos...</p>
+      </div>
+    );
+  }
+
+  if(!loaded) return <Upload onData={process} err={err} setErr={setErr} dark={dark} toggleDark={toggleDark}/>;
+
+  return(
+    <div style={{minHeight:'100vh',background:'var(--bg)',fontFamily:'Inter,system-ui,sans-serif'}} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget))setDrag(false);}} onDrop={onDrop}>
+      <div style={{position:'fixed',inset:0,pointerEvents:'none',overflow:'hidden',zIndex:0}}>
+        <div style={{position:'absolute',top:-100,right:-60,width:420,height:420,borderRadius:'50%',background:'rgba(251,191,36,.04)',filter:'blur(80px)'}}/>
+        <div style={{position:'absolute',bottom:-80,left:-80,width:360,height:360,borderRadius:'50%',background:'rgba(59,130,246,.04)',filter:'blur(70px)'}}/>
+      </div>
+      {drag&&(<div style={{position:'fixed',inset:0,zIndex:500,background:'rgba(8,13,26,.9)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,pointerEvents:'none'}}><span style={{fontSize:60}}>📂</span><p style={{color:'#fff',fontWeight:900,fontSize:22}}>Suelta el CSV</p></div>)}
+      {modal&&<Modal modal={modal} fData={fData} onClose={()=>setModal(null)}/>}
+
+      <div id="dash" style={{position:'relative',zIndex:1,maxWidth:1320,margin:'0 auto',padding:'16px 20px',display:'flex',flexDirection:'column',gap:16}}>
+
+        {/* HEADER */}
+        <header className="card" style={{padding:'14px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:16}}>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/3840px-Logo_DuocUC.svg.png" alt="Duoc UC" style={{height:34,objectFit:'contain'}}/>
+            <div style={{borderLeft:'1.5px solid var(--brd)',paddingLeft:16}}><h1 style={{fontSize:15,fontWeight:900,color:'var(--t1)',lineHeight:1.2}}>Monitor Cursos y Talleres</h1><p style={{fontSize:11,color:'var(--t3)',marginTop:2,fontWeight:600}}>Área Formativa · Bibliotecas Duoc UC</p></div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+            <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{meses.map(m=>(<span key={m} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 11px',background:'#0F1629',color:'#FBBF24',fontSize:11,fontWeight:800,borderRadius:7}}>✓ {m}</span>))}</div>
+            <div style={{display:'flex',alignItems:'center',gap:7,padding:'8px 12px',background:'var(--brd)',borderRadius:12}}>
+              <select value={mNuevo} onChange={e=>{sfx();setMN(e.target.value);}} style={{fontSize:12}}><option value="" disabled>Agregar mes</option>{MESES.map(m=><option key={m} value={m}>{m}</option>)}</select>
+              <div style={{position:'relative',overflow:'hidden'}}>
+                <input type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(!f)return;if(/\.xlsx?$/.test(f.name)){setErr('Guarda como CSV.');e.target.value=null;return;}const det=detectMes(f.name)||mNuevo;if(!det){setErr('Selecciona el mes primero.');e.target.value=null;return;}const r=new FileReader();r.onload=ev=>process(ev.target.result,det);r.readAsText(f,'ISO-8859-1');e.target.value=null;}} style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',zIndex:2}}/>
+                <button className="btnP" style={{pointerEvents:'none',padding:'7px 14px'}}><Ico n="upload" size={13} color="#0F172A"/>CSV</button>
+              </div>
+            </div>
+            <button onClick={exportPDF} className="btnG"><Ico n="pdf" size={14}/>PDF</button>
+            <button onClick={toggleDark} className="btnI"><Ico n={dark?'sun':'moon'} size={17}/></button>
+          </div>
+        </header>
+
+        {err&&(<div style={{display:'flex',gap:10,padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',borderRadius:12,color:C.r,fontSize:13,fontWeight:600}}><Ico n="alert" size={16} style={{flexShrink:0,marginTop:1}}/>{err}</div>)}
+
+        {/* FILTERS */}
+        <div className="card" style={{padding:'14px 20px',display:'flex',flexDirection:'column',gap:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,paddingBottom:10,borderBottom:'1px solid var(--brd)'}}><Ico n="filter" size={14} color={C.y}/><span style={{fontWeight:900,fontSize:13,color:'var(--t1)'}}>Filtros</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+            <span style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em',minWidth:56}}>Meses</span>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              <button className={`pill${sM.length===0?' on':''}`} onClick={()=>togM('Todos')}>Todos</button>
+              {meses.map(m=>(<button key={m} className={`pill${sM.includes(m)?' on':''}`} onClick={()=>togM(m)}>{m}</button>))}
+            </div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+            <span style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em',minWidth:56}}>sedes, talleres, fechas</span>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+              {opS.length>0&&<DD label="sedes" options={opS} selected={sS} onToggle={s=>{setSS(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s]);setST([]);setFecha('Todas');}} onClear={()=>{setSS([]);setST([]);setFecha('Todas');}}/>}
+              {opT.length>0&&<DD label="talleres" options={opT} selected={sT} onToggle={t=>{setST(p=>p.includes(t)?p.filter(x=>x!==t):[...p,t]);setFecha('Todas');}} onClear={()=>{setST([]);setFecha('Todas');}}/>}
+              {opF.length>1&&<select value={fecha} onChange={e=>{sfx();setFecha(e.target.value);}}>{opF.map(f=><option key={f} value={f}>{fmtD(f)}</option>)}</select>}
+            </div>
+          </div>
+        </div>
+
+        <KpiStrip ins={stats.ins} apr={stats.apr} tasa={stats.tasa}/>
+
+        <nav className="tabBar">
+          {TABS.map(t=>(<button key={t.id} className={`tab${tab===t.id?' on':''}`} onClick={()=>{sfx();setTab(t.id);}}><Ico n={t.icon} size={14}/>{t.lbl}{t.badge&&<span className="tabBadge">{t.badge}</span>}</button>))}
+        </nav>
+
+        {/* ══ RESUMEN ══ */}
+        {tab==='resumen'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:16}} className="fadeUp">
+            <div className="cWrap"><SH icon="cal" title="Asistencia por Fecha" sub="Evolución temporal de inscritos y aprobados"/><AreaChart data={byDate} dark={dark}/></div>
+            <div className="cWrap"><SH icon="bar" title="Por Taller" sub={`Top ${Math.min(byTaller.length,12)} talleres`}/><BarChart data={byTaller.slice(0,12)} dark={dark} height={320}/></div>
+            <div className="cWrap"><RankTable data={byTaller}/></div>
+          </div>
+        )}
+
+        {/* ══ COMPARAR ══ */}
+        {tab==='comparar'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:16}} className="fadeUp">
+            <div className="cWrap">
+              <SH icon="compare" title="Comparación Mensual" sub="Todos los meses cargados lado a lado"/>
+              {byMes.length?<BarChart data={byMes} lk="name" dark={dark} rotate={false} sortable={false} height={280}/>:<p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Carga más de un mes para ver la comparación</p>}
+            </div>
+             <div className="twoCol" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+              <div className="cWrap"><SH icon="compare" title="Top 5 Sedes · Desempeño" sub="Inscritos y aprobados (eje izq) vs tasa de aprobación % (eje der)"/><TopSedesCombo bySede={bySede} dark={dark}/></div>
+              <div className="cWrap"><SH icon="scatter" title="Tasa vs Inscritos" sub="Cada punto = un taller · líneas: mín 60% y meta 80%"/><ScatterComp byTaller={byTaller} dark={dark}/></div>
+            </div>
+            <div className="cWrap">
+              <SH icon="heat" title="Mapa de Calor" sub={`Intensidad = número de ${heatMetric.toLowerCase()} por taller y fecha`}>
+                <div style={{display:'flex',gap:2,background:'var(--brd)',padding:3,borderRadius:9}}>
+                  <button onClick={()=>{sfx();setHeatMetric('Inscritos');}} style={{padding:'5px 12px',borderRadius:7,fontSize:11,fontWeight:800,background:heatMetric==='Inscritos'?(dark?'#FBBF24':'#0F1629'):'transparent',color:heatMetric==='Inscritos'?(dark?'#0F1629':'#FBBF24'):'var(--t2)',transition:'all .15s'}}>Inscritos</button>
+                  <button onClick={()=>{sfx();setHeatMetric('Aprobados');}} style={{padding:'5px 12px',borderRadius:7,fontSize:11,fontWeight:800,background:heatMetric==='Aprobados'?(dark?'#FBBF24':'#0F1629'):'transparent',color:heatMetric==='Aprobados'?(dark?'#0F1629':'#FBBF24'):'var(--t2)',transition:'all .15s'}}>Aprobados</button>
+                </div>
+              </SH>
+              <Heatmap fData={fData} dark={dark} metric={heatMetric}/>
+            </div>
+          </div>
+        )}
+
+        {/* ══ SEDES ══ */}
+        {tab==='sedes'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:16}} className="fadeUp">
+            {bySede.length>0&&(<div className="cWrap"><SH icon="pin" title="Por Sede" sub="Clic en barra para ver detalle"/><BarChart data={bySede} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'sede',nombre:d.name});}} height={310}/></div>)}
+            {byEsc.length>0&&(<div className="cWrap"><SH icon="bld" title="Por Escuela" sub="Clic en barra para ver las sedes asociadas"/><HBarChart data={byEsc} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'escuela',nombre:d.name});}}/></div>)}
+            {byCar.length>0&&(<div className="cWrap"><SH icon="book" title="Por Carrera (Top 15)" sub="Clic en barra para ver las sedes asociadas"/><HBarChart data={byCar} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'carrera',nombre:d.name});}}/></div>)}
+            {byDoc.length>0&&(<div className="cWrap"><SH icon="users" title="Docentes por Sede"/><BarChart data={byDoc} dark={dark} height={280}/></div>)}
+            {!bySede.length&&!byEsc.length&&(<div style={{padding:52,textAlign:'center',color:'var(--t3)',fontSize:13}}>Sin datos demográficos. El CSV necesita columnas <b>sede</b>, <b>escuela</b> y/o <b>carrera</b>.</div>)}
+          </div>
+        )}
+
+        {/* ══ ALERTAS ══ */}
+        {tab==='alertas'&&(<div className="cWrap fadeUp"><SH icon="alert" title="Alertas de Aprobación" sub="Talleres con tasa menor al 60%"/><AlertsPanel byTaller={byTaller}/></div>)}
+
+        {/* ══ PIVOT ══ */}
+        {tab==='pivot'&&(<div className="cWrap fadeUp"><SH icon="pivot" title="Tabla Matriz" sub="Sede → Escuela → Carrera → Taller"/><PivotTable fData={fData}/></div>)}
+
+        <footer style={{textAlign:'center',padding:'14px 0',borderTop:'1px solid var(--brd)',fontSize:11,color:'var(--t3)',fontWeight:600}}>
+          Monitor Talleres Duoc UC v2.0 · {new Date().getFullYear()} · Área Formativa Bibliotecas
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+/* Mount */
+const ld=document.getElementById('_load');ld.classList.add('out');setTimeout(()=>ld.classList.add('gone'),400);
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+} catch(e){ console.error(e); window._showErr(e.message||String(e)); }
+</script>
+</body>
+</html>
