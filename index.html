@@ -111,7 +111,7 @@ const C={y:'#FBBF24',n:'#0F1629',g:'#10B981',r:'#EF4444',o:'#F97316',b:'#3B82F6'
 const PAL=['#FBBF24','#3B82F6','#10B981','#F97316','#A855F7','#EC4899'];
 
 /* ── SOUND ─────────────────────────── */
-const sfx=t=>{try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const c=new AC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);if(t==='ok'){o.type='triangle';o.frequency.setValueAtTime(440,c.currentTime);o.frequency.setValueAtTime(660,c.currentTime+.1);g.gain.setValueAtTime(.04,c.currentTime);g.gain.linearRampToValueAtTime(0,c.currentTime+.28);o.start();o.stop(c.currentTime+.28);}else{o.type='sine';o.frequency.setValueAtTime(480,c.currentTime);o.frequency.exponentialRampToValueAtTime(240,c.currentTime+.07);g.gain.setValueAtTime(.035,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.07);o.start();o.stop(c.currentTime+.07);}}catch(e){}};
+const sfx=t=>{try{if(localStorage.getItem('duoc_sound')==='off')return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const c=new AC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);if(t==='ok'){o.type='triangle';o.frequency.setValueAtTime(440,c.currentTime);o.frequency.setValueAtTime(660,c.currentTime+.1);g.gain.setValueAtTime(.04,c.currentTime);g.gain.linearRampToValueAtTime(0,c.currentTime+.28);o.start();o.stop(c.currentTime+.28);}else{o.type='sine';o.frequency.setValueAtTime(480,c.currentTime);o.frequency.exponentialRampToValueAtTime(240,c.currentTime+.07);g.gain.setValueAtTime(.035,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.07);o.start();o.stop(c.currentTime+.07);}}catch(e){}};
 
 /* ── CSV ───────────────────────────── */
 const san=t=>t?t.toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim():'';
@@ -147,6 +147,8 @@ const PATHS={
   compare:'M2 2h9a2 2 0 012 2v16a2 2 0 01-2 2H2zM13 2h9v20h-9',
   pivot:'M3 3h18a2 2 0 012 2v14a2 2 0 01-2 2H3a2 2 0 01-2-2V5a2 2 0 012-2M3 9h18M3 15h18M9 3v18',
   heat:'M3 3h7a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1M14 3h7a1 1 0 011 1v7a1 1 0 01-1 1h-7a1 1 0 01-1-1V4a1 1 0 011-1M14 14h7a1 1 0 011 1v5a1 1 0 01-1 1h-7a1 1 0 01-1-1v-5a1 1 0 011-1M3 14h7a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5a1 1 0 011-1',
+  volume:'M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 010 14.14 M15.54 8.46a5 5 0 010 7.07',
+  volumeX:'M11 5L6 9H2v6h4l5 4V5z M23 9l-6 6 M17 9l6 6',
 };
 const Ico=({n,size=16,color='currentColor',style={}})=>{
   const d=PATHS[n]||'';
@@ -452,7 +454,7 @@ const ScatterComp=({byTaller,dark})=>{
     if(!canR.current||!window.Chart||!byTaller.length) return;
     killChart(chR);
     const {grid,tick,fontFamily}=cjsDef(dark);
-    const pts=byTaller.map(d=>({x:d.Inscritos,y:d.Inscritos>0?+(d.Aprobados/d.Inscritos*100).toFixed(1):0,nm:d.name}));
+    const pts=byTaller.map(d=>({x:d.Inscritos,y:d.Inscritos>0?+(d.Aprobados/d.Inscritos*100).toFixed(1):0,ap:d.Aprobados,nm:d.name}));
     const maxX=Math.max(...pts.map(p=>p.x),10)*1.1;
     chR.current=new window.Chart(canR.current,{
       type:'scatter',
@@ -462,7 +464,7 @@ const ScatterComp=({byTaller,dark})=>{
         {label:'Meta 80%',data:[{x:0,y:80},{x:maxX,y:80}],type:'line',borderColor:'#10B981',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false},
       ]},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{cornerRadius:10,callbacks:{label:ctx=>{if(ctx.datasetIndex===0){const p=pts[ctx.dataIndex];return[p.nm,`Inscritos: ${p.x}  ·  Tasa: ${p.y}%`];}return[];}}}},
+        plugins:{legend:{display:false},tooltip:{cornerRadius:10,callbacks:{label:ctx=>{if(ctx.datasetIndex===0){const p=pts[ctx.dataIndex];return[p.nm,`Inscritos: ${p.x}  ·  Aprobados: ${p.ap}  ·  Tasa: ${p.y}%`];}return[];}}}},
         scales:{
           x:{title:{display:true,text:'Inscritos',color:tick,font:{family:fontFamily,size:11,weight:'700'}},grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}}},
           y:{title:{display:true,text:'Tasa %',color:tick,font:{family:fontFamily,size:11,weight:'700'}},grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}},min:0,max:105}
@@ -487,14 +489,16 @@ const InfoTip=({text})=>{
 };
 
 /* ── DROPDOWN ──────────────────────── */
-const DD=({label,options,selected,onToggle,onClear})=>{
+const DD=({label,options,exclusions,onToggle,onSelectAll,onClearAll})=>{
   const[open,setOpen]=useState(false);const ref=useRef(null);
   useEffect(()=>{const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
-  const none=selected.length===0;
   const lbl=label.toLowerCase();
+  const selectedCount=options.filter(o=>!exclusions.includes(o)).length;
+  const allSelected=selectedCount===options.length;
+  const noneSelected=selectedCount===0;
   const gender=lbl==='talleres'?'Todos los':'Todas las';
   const allBtnText=lbl==='talleres'?'Todos':'Todas';
-  const disp=none?`${gender} ${lbl}`:selected.length===1?selected[0]:`${selected.length} ${lbl}`;
+  const disp=allSelected?`${gender} ${lbl}`:noneSelected?`Ningún ${lbl.slice(0,-1)}`:selectedCount===1?(label==='fechas'?fmtD(options.find(o=>!exclusions.includes(o))):options.find(o=>!exclusions.includes(o))):`${selectedCount} ${lbl}`;
   return(
     <div ref={ref} style={{position:'relative'}}>
       <button onClick={()=>{sfx();setOpen(p=>!p);}} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',background:'var(--inp)',border:'1px solid var(--brd)',borderRadius:10,fontSize:13,fontWeight:700,color:'var(--t1)',minWidth:175,justifyContent:'space-between',fontFamily:'inherit',boxShadow:'0 1px 4px rgba(0,0,0,.06)'}}>
@@ -503,17 +507,20 @@ const DD=({label,options,selected,onToggle,onClear})=>{
       </button>
       {open&&(<div className="ddMenu">
         <div style={{display:'flex',gap:6,padding:'8px 10px',borderBottom:'1px solid var(--brd)'}}>
-          <button onClick={()=>{options.forEach(o=>{if(!selected.includes(o))onToggle(o);});sfx();}} style={{flex:1,padding:'5px 0',fontSize:11,fontWeight:800,background:'#0F1629',color:'#FBBF24',borderRadius:7,fontFamily:'inherit'}}>{allBtnText}</button>
-          <button onClick={()=>{onClear();sfx();}} disabled={none} style={{flex:1,padding:'5px 0',fontSize:11,fontWeight:800,background:'var(--brd)',color:'var(--t2)',borderRadius:7,fontFamily:'inherit',opacity:none?.4:1}}>Limpiar</button>
+          <button onClick={()=>{onSelectAll();sfx();}} style={{flex:1,padding:'5px 0',fontSize:11,fontWeight:800,background:'#0F1629',color:'#FBBF24',borderRadius:7,fontFamily:'inherit'}}>{allBtnText}</button>
+          <button onClick={()=>{onClearAll();sfx();}} disabled={noneSelected} style={{flex:1,padding:'5px 0',fontSize:11,fontWeight:800,background:'var(--brd)',color:'var(--t2)',borderRadius:7,fontFamily:'inherit',opacity:noneSelected?.4:1}}>Limpiar</button>
         </div>
-        {options.map(opt=>(
-          <button key={opt} onClick={()=>{onToggle(opt);sfx();}} style={{width:'100%',textAlign:'left',padding:'8px 14px',fontSize:13,fontWeight:selected.includes(opt)?800:600,display:'flex',alignItems:'center',gap:8,fontFamily:'inherit',background:selected.includes(opt)?'rgba(251,191,36,.1)':'transparent',color:'var(--t1)',transition:'background .15s'}}>
-            <span style={{width:13,height:13,borderRadius:4,border:'1.5px solid',borderColor:selected.includes(opt)?C.y:'var(--t3)',background:selected.includes(opt)?C.y:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              {selected.includes(opt)&&(<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0F1629" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>)}
-            </span>
-            <span className="trunc" style={{maxWidth:170}}>{opt}</span>
-          </button>
-        ))}
+        {options.map(opt=>{
+          const isChecked=!exclusions.includes(opt);
+          return (
+            <button key={opt} onClick={()=>{onToggle(opt);sfx();}} style={{width:'100%',textAlign:'left',padding:'8px 14px',fontSize:13,fontWeight:isChecked?800:600,display:'flex',alignItems:'center',gap:8,fontFamily:'inherit',background:isChecked?'rgba(251,191,36,.1)':'transparent',color:'var(--t1)',transition:'background .15s'}}>
+              <span style={{width:13,height:13,borderRadius:4,border:'1.5px solid',borderColor:isChecked?C.y:'var(--t3)',background:isChecked?C.y:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                {isChecked&&(<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0F1629" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>)}
+              </span>
+              <span className="trunc" style={{maxWidth:170}}>{label==='fechas'?fmtD(opt):opt}</span>
+            </button>
+          );
+        })}
       </div>)}
     </div>
   );
@@ -660,20 +667,198 @@ const PivotTable=({fData})=>{
 
 /* ── HEATMAP ───────────────────────── */
 const Heatmap=({fData,dark,metric='Inscritos'})=>{
-  const{talleres,fechas,matrix,maxVal}=useMemo(()=>{const acc={};fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).forEach(d=>{if(!acc[d.taller])acc[d.taller]={};const val=metric==='Aprobados'?(d.aprobo?1:0):1;acc[d.taller][d.fecha]=(acc[d.taller][d.fecha]||0)+val;});const talleres=[...new Set(fData.map(d=>d.taller))].slice(0,12);const fechas=[...new Set(fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).map(d=>d.fecha))].sort().slice(0,20);const matrix=talleres.map(t=>fechas.map(f=>acc[t]?.[f]||0));return{talleres,fechas,matrix,maxVal:Math.max(...matrix.flat(),1)};},[fData,metric]);
+  const containerRef=useRef(null);
+  const[tooltip,setTooltip]=useState(null);
+  const{talleres,fechas,matrix,maxVal}=useMemo(()=>{
+    const accIns={};const accApr={};
+    fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).forEach(d=>{
+      if(!accIns[d.taller])accIns[d.taller]={};
+      if(!accApr[d.taller])accApr[d.taller]={};
+      accIns[d.taller][d.fecha]=(accIns[d.taller][d.fecha]||0)+1;
+      if(d.aprobo)accApr[d.taller][d.fecha]=(accApr[d.taller][d.fecha]||0)+1;
+    });
+    const talleres=[...new Set(fData.map(d=>d.taller))].slice(0,12);
+    const fechas=[...new Set(fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).map(d=>d.fecha))].sort().slice(0,20);
+    const matrix=talleres.map(t=>fechas.map(f=>({
+      ins:accIns[t]?.[f]||0,
+      apr:accApr[t]?.[f]||0
+    })));
+    const flatVals=matrix.flat().map(c=>metric==='Aprobados'?c.apr:c.ins);
+    return{talleres,fechas,matrix,maxVal:Math.max(...flatVals,1)};
+  },[fData,metric]);
+  
+  const monthGroups=useMemo(()=>{
+    const groups=[];
+    fechas.forEach(f=>{
+      const mNum=parseInt(f.split('-')[0]);
+      const mName=MESES[mNum-1]||'Desconocido';
+      if(!groups.length||groups[groups.length-1].month!==mName){
+        groups.push({month:mName,count:1,dates:[f]});
+      }else{
+        groups[groups.length-1].count++;
+        groups[groups.length-1].dates.push(f);
+      }
+    });
+    return groups;
+  },[fechas]);
+
   if(!talleres.length||!fechas.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin fechas disponibles para el mapa de calor</p>;
   const gc=v=>{const t=v/maxVal;if(t===0)return 'var(--brd)';return dark ? `rgba(251,191,36,${0.12+t*0.8})` : `rgba(217,119,6,${0.1+t*0.85})`;};
   const CW=Math.max(28,Math.min(50,Math.floor(660/fechas.length))),CH=38;
+  
   return(
-    <div style={{overflowX:'auto',paddingBottom:12}}>
+    <div ref={containerRef} style={{overflowX:'auto',paddingBottom:12,position:'relative'}}>
       <div style={{display:'grid',gridTemplateColumns:`155px repeat(${fechas.length},${CW}px)`,gap:4,minWidth:300}}>
-        <div/>
-        {fechas.map(f=>(<div key={f} style={{fontSize:9,fontWeight:700,color:'var(--t3)',height:CH,display:'flex',alignItems:'flex-end',justifyContent:'center',paddingBottom:4,overflow:'hidden',transform:'rotate(-45deg)',transformOrigin:'center bottom'}}>{f.slice(3,8)}</div>))}
+        {/* Month Headers */}
+        <div style={{position:'sticky',left:0,zIndex:12,background:'var(--solid)',borderRight:'2px solid var(--brd)',height:24}}/>
+        {monthGroups.map(g=>(
+          <div key={g.month} style={{gridColumn:`span ${g.count}`,fontSize:10,fontWeight:800,color:'var(--t2)',background:'var(--brd)',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',borderRadius:4,height:24,borderBottom:'1px solid var(--brd)'}}>
+            {g.month}
+          </div>
+        ))}
+
+        {/* Date Headers */}
+        <div style={{position:'sticky',left:0,zIndex:12,background:'var(--solid)',borderRight:'2px solid var(--brd)',height:CH}}/>
+        {fechas.map((f,fi)=>{
+          const isNewMonth = fi > 0 && f.split('-')[0] !== fechas[fi-1].split('-')[0];
+          return (
+            <div key={f} style={{
+              fontSize:9,
+              fontWeight:700,
+              color:'var(--t3)',
+              height:CH,
+              display:'flex',
+              alignItems:'flex-end',
+              justifyContent:'center',
+              paddingBottom:4,
+              overflow:'hidden',
+              transform:'rotate(-45deg)',
+              transformOrigin:'center bottom',
+              borderLeft: isNewMonth ? '2px solid var(--t2)' : 'none',
+              paddingLeft: isNewMonth ? 4 : 0
+            }}>
+              {f.slice(3,8)}
+            </div>
+          );
+        })}
+
+        {/* Workshop Rows */}
         {talleres.map((t,ti)=>(<React.Fragment key={t}>
-          <div style={{fontSize:11,fontWeight:700,color:'var(--t1)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',height:CH,paddingRight:8}}>{t.length>22?t.slice(0,21)+'…':t}</div>
-          {fechas.map((f,fi)=>{const v=matrix[ti][fi];const tc=dark ? (v > maxVal*0.5 ? '#0F1629' : '#FFFFFF') : (v > maxVal*0.5 ? '#FFFFFF' : '#0F1629');return(<div key={f} className="hCell" title={`${t} · ${f}: ${v} ${metric.toLowerCase()}`} style={{height:CH,background:gc(v),display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:tc}}>{v>0?v:''}</div>);})}
+          <div style={{
+            position:'sticky',
+            left:0,
+            zIndex:10,
+            background:'var(--solid)',
+            fontSize:11,
+            fontWeight:700,
+            color:'var(--t1)',
+            overflow:'hidden',
+            textOverflow:'ellipsis',
+            whiteSpace:'nowrap',
+            display:'flex',
+            alignItems:'center',
+            height:CH,
+            paddingRight:8,
+            borderRight:'2px solid var(--brd)',
+            boxShadow:'2px 0 5px rgba(0,0,0,0.02)'
+          }} title={t}>
+            {t.length>22?t.slice(0,21)+'…':t}
+          </div>
+          {fechas.map((f,fi)=>{
+            const cell=matrix[ti][fi];
+            const v=metric==='Aprobados'?cell.apr:cell.ins;
+            const isNewMonth = fi > 0 && f.split('-')[0] !== fechas[fi-1].split('-')[0];
+            const tc=dark ? (v > maxVal*0.5 ? '#0F1629' : '#FFFFFF') : (v > maxVal*0.5 ? '#FFFFFF' : '#0F1629');
+            const rate=cell.ins>0?Math.round(cell.apr/cell.ins*100):0;
+            return(
+              <div key={f} className="hCell" style={{
+                height:CH,
+                background:gc(v),
+                display:'flex',
+                alignItems:'center',
+                justifyContent:'center',
+                fontSize:10,
+                fontWeight:900,
+                color:tc,
+                borderLeft: isNewMonth ? '2px solid var(--t2)' : 'none'
+              }}
+              onMouseEnter={(e)=>{
+                const rect = e.currentTarget.getBoundingClientRect();
+                const containerRect = containerRef.current.getBoundingClientRect();
+                const isTopRow = rect.top - containerRect.top < 85;
+                const top = isTopRow 
+                  ? rect.bottom - containerRect.top + 6 
+                  : rect.top - containerRect.top - 68;
+                const left = rect.left - containerRect.left + rect.width / 2;
+                setTooltip({
+                  t,
+                  f,
+                  ins: cell.ins,
+                  apr: cell.apr,
+                  rate,
+                  top,
+                  left,
+                  isTopRow
+                });
+              }}
+              onMouseLeave={()=>setTooltip(null)}
+              >
+                {v>0?v:''}
+              </div>
+            );
+          })}
         </React.Fragment>))}
       </div>
+
+      {/* Floating custom tooltip */}
+      {tooltip && (
+        <div style={{
+          position:'absolute',
+          top:tooltip.top,
+          left:tooltip.left,
+          transform:'translateX(-50%)',
+          pointerEvents:'none',
+          zIndex:1000,
+          background:'#0F1629',
+          color:'#FFFFFF',
+          padding:'8px 12px',
+          borderRadius:'8px',
+          boxShadow:'var(--sh2)',
+          border:'1px solid rgba(255,255,255,0.1)',
+          fontSize:'11px',
+          fontFamily:'inherit',
+          display:'flex',
+          flexDirection:'column',
+          gap:'4px',
+          whiteSpace:'nowrap',
+          transition:'top 0.1s, left 0.1s'
+        }}>
+          <div style={{display:'flex',alignItems:'center',gap:6,fontWeight:800}}>
+            <div style={{width:8,height:8,borderRadius:2,background:'#FBBF24'}}/>
+            <span>{tooltip.t}</span>
+          </div>
+          <div style={{color:'#94A3B8',fontWeight:600}}>
+            Fecha: {fmtD(tooltip.f)}
+          </div>
+          <div style={{fontWeight:600}}>
+            Inscritos: <span style={{color:'#FFF',fontWeight:800}}>{tooltip.ins}</span> · Aprobados: <span style={{color:'#FBBF24',fontWeight:800}}>{tooltip.apr}</span> · Tasa: <span style={{color:'#10B981',fontWeight:800}}>{tooltip.rate}%</span>
+          </div>
+          <div style={{
+            position:'absolute',
+            left:'50%',
+            transform:'translateX(-50%)',
+            border:'5px solid transparent',
+            ...(tooltip.isTopRow ? {
+              bottom:'100%',
+              borderBottomColor:'#0F1629'
+            } : {
+              top:'100%',
+              borderTopColor:'#0F1629'
+            })
+          }}/>
+        </div>
+      )}
+
       <div style={{display:'flex',alignItems:'center',gap:7,marginTop:20,justifyContent:'flex-end',paddingRight:12}}>
         <span style={{fontSize:11,color:'var(--t3)',fontWeight:700}}>Menos</span>
         {[0,.25,.5,.75,1].map(v=>(<div key={v} style={{width:20,height:20,borderRadius:5,background:gc(v*maxVal||0)}}/>))}
@@ -779,14 +964,17 @@ const Modal=({modal,fData,onClose})=>{
 };
 
 /* ── UPLOAD SCREEN ─────────────────── */
-const Upload=({onData,err,setErr,dark,toggleDark})=>{
+const Upload=({onData,err,setErr,dark,toggleDark,soundOn,toggleSound})=>{
   const[drag,setDrag]=useState(false);const[mes,setMes]=useState('');
   const go=(file,m)=>{if(/\.xlsx?$/.test(file.name)){setErr('Guarda el Excel como CSV primero.');return;}const r=new FileReader();r.onload=ev=>onData(ev.target.result,m);r.readAsText(file,'ISO-8859-1');};
   const drop=e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(!f)return;const det=detectMes(f.name)||mes;if(!det){setErr(`No se detectó el mes en "${f.name}". Selecciónalo abajo.`);return;}go(f,det);};
   const pick=e=>{const f=e.target.files[0];if(!f)return;const det=detectMes(f.name)||mes;if(!det){setErr('No se detectó el mes. Selecciónalo manualmente.');e.target.value=null;return;}go(f,det);e.target.value=null;};
   return(
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:'var(--bg)',fontFamily:'inherit',position:'relative'}} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={drop}>
-      <button onClick={toggleDark} className="btnI" style={{position:'fixed',top:20,right:20,zIndex:100}}><Ico n={dark?'sun':'moon'} size={17}/></button>
+      <div style={{position:'fixed',top:20,right:20,zIndex:100,display:'flex',gap:8}}>
+        <button onClick={toggleSound} className="btnI"><Ico n={soundOn?'volume':'volumeX'} size={17}/></button>
+        <button onClick={toggleDark} className="btnI"><Ico n={dark?'sun':'moon'} size={17}/></button>
+      </div>
       {drag&&(<div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(8,13,26,.92)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,pointerEvents:'none'}}><span style={{fontSize:60}}>📂</span><p style={{color:'#fff',fontWeight:900,fontSize:22}}>Suelta el archivo CSV</p><p style={{color:'rgba(255,255,255,.5)',fontSize:14}}>El mes se detecta desde el nombre</p></div>)}
       <div className="scPop" style={{background:'var(--gb)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',border:'1px solid var(--gbr)',borderRadius:26,boxShadow:'var(--shx)',padding:40,maxWidth:440,width:'100%',textAlign:'center',position:'relative'}}>
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/3840px-Logo_DuocUC.svg.png" alt="Duoc UC" style={{height:38,objectFit:'contain',marginBottom:20}}/>
@@ -820,9 +1008,19 @@ function App(){
   useEffect(()=>{document.documentElement.setAttribute('data-theme',dark?'dark':'light');localStorage.setItem('duoc_theme',dark?'dark':'light');},[dark]);
   const toggleDark=()=>{sfx();setDark(p=>!p);};
 
+  const [soundOn, setSoundOn] = useState(() => localStorage.getItem('duoc_sound') !== 'off');
+  const toggleSound = () => {
+    const newVal = !soundOn;
+    setSoundOn(newVal);
+    localStorage.setItem('duoc_sound', newVal ? 'on' : 'off');
+    if (newVal) {
+      setTimeout(() => sfx('ok'), 50);
+    }
+  };
+
   const[ds,setDs]=useState({});const[err,setErr]=useState(null);
-  const[mNuevo,setMN]=useState('');const[sM,setSM]=useState([]);const[sS,setSS]=useState([]);
-  const[sT,setST]=useState([]);const[fecha,setFecha]=useState('Todas');
+  const[mNuevo,setMN]=useState('');const[sM,setSM]=useState([]);
+  const[exS,setExS]=useState([]);const[exT,setExT]=useState([]);const[exF,setExF]=useState([]);
   const[modal,setModal]=useState(null);const[tab,setTab]=useState('resumen');const[drag,setDrag]=useState(false);
   const[heatMetric,setHeatMetric]=useState('Inscritos');
   const[loadingPreload,setLoadingPreload]=useState(true);
@@ -851,7 +1049,7 @@ function App(){
     try{
       const rows=parseRows(txt,key);
       setErr(null);
-      setDs(p=>({...p,[key]:rows}));setSM([key]);setSS([]);setST([]);setFecha('Todas');setMN('');sfx('ok');
+      setDs(p=>({...p,[key]:rows}));setSM([key]);setExS([]);setExT([]);setExF([]);setMN('');sfx('ok');
     }catch(e){console.error(e);setErr(`Error al procesar ${key}: ${e.message}`);}
   };
 
@@ -883,11 +1081,33 @@ function App(){
 
   const onDrop=e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(!f)return;if(/\.xlsx?$/.test(f.name)){setErr('Guarda como CSV.');return;}const det=detectMes(f.name)||mNuevo;if(!det){setErr(`No se detectó mes en "${f.name}". Selecciónalo arriba.`);return;}const r=new FileReader();r.onload=ev=>process(ev.target.result,det);r.readAsText(f,'ISO-8859-1');};
 
-  const opS=useMemo(()=>{const b=sM.length?raw.filter(d=>sM.includes(d.mes)):raw;return[...new Set(b.map(d=>d.sede))].filter(s=>s&&s!=='Sin datos'&&s!=='Desconocida').sort();},[raw,sM]);
-  const opT=useMemo(()=>{let b=sM.length?raw.filter(d=>sM.includes(d.mes)):raw;if(sS.length)b=b.filter(d=>sS.includes(d.sede));return[...new Set(b.map(d=>d.taller))].filter(t=>t!=='Desconocido').sort();},[raw,sM,sS]);
-  const opF=useMemo(()=>{let b=raw;if(sM.length)b=b.filter(d=>sM.includes(d.mes));if(sS.length)b=b.filter(d=>sS.includes(d.sede));if(sT.length)b=b.filter(d=>sT.includes(d.taller));const fs=[...new Set(b.map(d=>d.fecha))].filter(f=>!['Sin fecha','Fecha Desconocida'].includes(f)).sort();return['Todas',...fs];},[raw,sM,sS,sT]);
-  const fData=useMemo(()=>raw.filter(d=>{const ok1=!sM.length||sM.includes(d.mes);const ok2=!sS.length||sS.includes(d.sede);const ok3=!sT.length||sT.includes(d.taller);const ok4=fecha==='Todas'||d.fecha===fecha;return ok1&&ok2&&ok3&&ok4;}),[raw,sM,sS,sT,fecha]);
-  const togM=m=>{sfx();setSM(m==='Todos'?[]:p=>p.includes(m)?p.filter(x=>x!==m):[...p,m]);setFecha('Todas');};
+  const opS=useMemo(()=>{
+    const b=sM.length?raw.filter(d=>sM.includes(d.mes)):raw;
+    return[...new Set(b.map(d=>d.sede))].filter(s=>s&&!['sin datos','desconocida','desconocido'].includes(s.toLowerCase().trim())).sort();
+  },[raw,sM]);
+
+  const opT=useMemo(()=>{
+    let b=sM.length?raw.filter(d=>sM.includes(d.mes)):raw;
+    b=b.filter(d=>!exS.includes(d.sede));
+    return[...new Set(b.map(d=>d.taller))].filter(t=>t!=='Desconocido').sort();
+  },[raw,sM,exS]);
+
+  const opF=useMemo(()=>{
+    let b=raw;
+    if(sM.length)b=b.filter(d=>sM.includes(d.mes));
+    b=b.filter(d=>!exS.includes(d.sede));
+    b=b.filter(d=>!exT.includes(d.taller));
+    return[...new Set(b.map(d=>d.fecha))].filter(f=>!['Sin fecha','Fecha Desconocida'].includes(f)).sort();
+  },[raw,sM,exS,exT]);
+
+  const fData=useMemo(()=>raw.filter(d=>{
+    const ok1=!sM.length||sM.includes(d.mes);
+    const ok2=!exS.includes(d.sede)&&!['sin datos','desconocida','desconocido'].includes(d.sede.toLowerCase().trim());
+    const ok3=!exT.includes(d.taller);
+    const ok4=!exF.includes(d.fecha);
+    return ok1&&ok2&&ok3&&ok4;
+  }),[raw,sM,exS,exT,exF]);
+  const togM=m=>{sfx();setSM(m==='Todos'?[]:p=>p.includes(m)?p.filter(x=>x!==m):[...p,m]);setExF([]);};
 
   const stats=useMemo(()=>{const ins=fData.length,apr=fData.filter(d=>d.aprobo).length;return{ins,apr,tasa:ins>0?+((apr/ins)*100).toFixed(1):0};},[fData]);
   const byDate=useMemo(()=>{const acc={};fData.forEach(d=>{if(['Fecha Desconocida','Sin fecha'].includes(d.fecha))return;if(!acc[d.fecha])acc[d.fecha]={f:d.fecha,Inscritos:0,Aprobados:0,talleres:new Set()};acc[d.fecha].Inscritos++;if(d.aprobo)acc[d.fecha].Aprobados++;if(d.taller)acc[d.fecha].talleres.add(d.taller);});return Object.values(acc).map(d=>({...d,label:fmtD(d.f),talleresList:Array.from(d.talleres)})).sort((a,b)=>a.f.localeCompare(b.f));},[fData]);
@@ -922,7 +1142,7 @@ function App(){
     );
   }
 
-  if(!loaded) return <Upload onData={process} err={err} setErr={setErr} dark={dark} toggleDark={toggleDark}/>;
+  if(!loaded) return <Upload onData={process} err={err} setErr={setErr} dark={dark} toggleDark={toggleDark} soundOn={soundOn} toggleSound={toggleSound}/>;
 
   return(
     <div style={{minHeight:'100vh',background:'var(--bg)',fontFamily:'Inter,system-ui,sans-serif'}} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget))setDrag(false);}} onDrop={onDrop}>
@@ -950,7 +1170,7 @@ function App(){
                 <button className="btnP" style={{pointerEvents:'none',padding:'7px 14px'}}><Ico n="upload" size={13} color="#0F172A"/>CSV</button>
               </div>
             </div>
-            <button onClick={exportPDF} className="btnG"><Ico n="pdf" size={14}/>PDF</button>
+            <button onClick={toggleSound} className="btnI"><Ico n={soundOn?'volume':'volumeX'} size={17}/></button>
             <button onClick={toggleDark} className="btnI"><Ico n={dark?'sun':'moon'} size={17}/></button>
           </div>
         </header>
@@ -970,9 +1190,9 @@ function App(){
           <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
             <span style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.08em',minWidth:56}}>sedes, talleres, fechas</span>
             <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-              {opS.length>0&&<DD label="sedes" options={opS} selected={sS} onToggle={s=>{setSS(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s]);setST([]);setFecha('Todas');}} onClear={()=>{setSS([]);setST([]);setFecha('Todas');}}/>}
-              {opT.length>0&&<DD label="talleres" options={opT} selected={sT} onToggle={t=>{setST(p=>p.includes(t)?p.filter(x=>x!==t):[...p,t]);setFecha('Todas');}} onClear={()=>{setST([]);setFecha('Todas');}}/>}
-              {opF.length>1&&<select value={fecha} onChange={e=>{sfx();setFecha(e.target.value);}}>{opF.map(f=><option key={f} value={f}>{fmtD(f)}</option>)}</select>}
+              {opS.length>0&&<DD label="sedes" options={opS} exclusions={exS} onToggle={s=>setExS(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s])} onSelectAll={()=>setExS([])} onClearAll={()=>setExS([...opS])}/>}
+              {opT.length>0&&<DD label="talleres" options={opT} exclusions={exT} onToggle={t=>setExT(p=>p.includes(t)?p.filter(x=>x!==t):[...p,t])} onSelectAll={()=>setExT([])} onClearAll={()=>setExT([...opT])}/>}
+              {opF.length>0&&<DD label="fechas" options={opF} exclusions={exF} onToggle={f=>setExF(p=>p.includes(f)?p.filter(x=>x!==f):[...p,f])} onSelectAll={()=>setExF([])} onClearAll={()=>setExF([...opF])}/>}
             </div>
           </div>
         </div>
