@@ -1054,22 +1054,23 @@ function App(){
   };
 
   useEffect(()=>{
-    const preloads=['Abril','Mayo'];
+    const preloads=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const loadedData={};
     Promise.all(
-      preloads.map(m=>
-        fetch(`data/${m.toLowerCase()}.csv`)
-          .then(res=>{
-            if(!res.ok)throw new Error('Not found');
-            return res.arrayBuffer();
-          })
+      preloads.map(m=>{
+        const tryFetch=url=>fetch(url).then(res=>{
+          if(!res.ok)throw new Error('Not found');
+          return res.arrayBuffer();
+        });
+        return tryFetch(`data/${m.toLowerCase()}.csv`)
+          .catch(()=>tryFetch(`data/${m}.csv`))
           .then(buf=>{
             const txt=new TextDecoder('iso-8859-1').decode(buf);
             const rows=parseRows(txt,m);
             if(rows&&rows.length) loadedData[m]=rows;
           })
-          .catch(e=>console.log(`Preload omitido para ${m}:`,e))
-      )
+          .catch(e=>console.log(`Preload omitido para ${m}:`,e));
+      })
     ).then(()=>{
       if(Object.keys(loadedData).length>0){
         setDs(p=>({...p,...loadedData}));
