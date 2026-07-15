@@ -603,8 +603,22 @@ const RankTable=({data})=>{
     data.forEach(d=>{ins+=d.Inscritos;apr+=d.Aprobados;});
     return{ins,apr};
   },[data]);
-  const exp=()=>{const rows=[['#','Taller','Inscritos','Aprobados','Sesiones','Tasa%'],...sorted.map((d,i)=>[i+1,`"${d.name}"`,d.Inscritos,d.Aprobados,d.Sesiones,d.Inscritos>0?(d.Aprobados/d.Inscritos*100).toFixed(1):0])];const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ranking_talleres.csv';a.click();};
-  const cols=[{k:'Inscritos',l:'Inscr.'},{k:'Aprobados',l:'Aprobados'},{k:'Sesiones',l:'Sesiones'}];
+  const exp=()=>{
+    const rows=[
+      ['#','Taller','Inscritos','% Inscritos','Aprobados','% Aprobados','Sesiones','Tasa%'],
+      ...sorted.map((d,i)=>{
+        const pctIns=totals.ins>0?((d.Inscritos/totals.ins)*100).toFixed(1):0;
+        const pctApr=totals.apr>0?((d.Aprobados/totals.apr)*100).toFixed(1):0;
+        const tasa=d.Inscritos>0?(d.Aprobados/d.Inscritos*100).toFixed(1):0;
+        return [i+1,`"${d.name}"`,d.Inscritos,`${pctIns}%`,d.Aprobados,`${pctApr}%`,d.Sesiones,`${tasa}%`];
+      })
+    ];
+    const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='ranking_talleres.csv';
+    a.click();
+  };
   const th={padding:'10px 16px',fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--t3)',userSelect:'none'};
   return(
     <>
@@ -612,15 +626,41 @@ const RankTable=({data})=>{
       <div style={{overflowX:'auto',borderRadius:12,border:'1px solid var(--brd)'}}>
         <table><thead><tr style={{background:'var(--brd)'}}>
           <th style={{...th,width:36}}>#</th><th style={th}>Taller</th>
-          {cols.map(col=>(
-            <th key={col.k} style={{...th,textAlign:'right',cursor:'pointer',color:sk===col.k?C.y:'var(--t3)'}} onClick={()=>hs(col.k)}>
-              <span style={{display:'inline-flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>{col.l}
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={sk===col.k?C.y:'var(--t3)'} strokeWidth="2" strokeLinecap="round">
-                  {sk===col.k&&asc?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
-                </svg>
-              </span>
-            </th>
-          ))}
+          <th style={{...th,textAlign:'right',cursor:'pointer',color:sk==='Inscritos'?C.y:'var(--t3)'}} onClick={()=>hs('Inscritos')}>
+            <span style={{display:'inline-flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>Inscr.
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={sk==='Inscritos'?C.y:'var(--t3)'} strokeWidth="2" strokeLinecap="round">
+                {sk==='Inscritos'&&asc?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
+              </svg>
+            </span>
+          </th>
+          <th style={{...th,textAlign:'right',cursor:'pointer',color:sk==='Inscritos'?C.y:'var(--t3)'}} onClick={()=>hs('Inscritos')}>
+            <span style={{display:'inline-flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>% Inscr.
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={sk==='Inscritos'?C.y:'var(--t3)'} strokeWidth="2" strokeLinecap="round">
+                {sk==='Inscritos'&&asc?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
+              </svg>
+            </span>
+          </th>
+          <th style={{...th,textAlign:'right',cursor:'pointer',color:sk==='Aprobados'?C.y:'var(--t3)'}} onClick={()=>hs('Aprobados')}>
+            <span style={{display:'inline-flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>Aprobados
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={sk==='Aprobados'?C.y:'var(--t3)'} strokeWidth="2" strokeLinecap="round">
+                {sk==='Aprobados'&&asc?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
+              </svg>
+            </span>
+          </th>
+          <th style={{...th,textAlign:'right',cursor:'pointer',color:sk==='Aprobados'?C.y:'var(--t3)'}} onClick={()=>hs('Aprobados')}>
+            <span style={{display:'inline-flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>% Aprob.
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={sk==='Aprobados'?C.y:'var(--t3)'} strokeWidth="2" strokeLinecap="round">
+                {sk==='Aprobados'&&asc?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
+              </svg>
+            </span>
+          </th>
+          <th style={{...th,textAlign:'right',cursor:'pointer',color:sk==='Sesiones'?C.y:'var(--t3)'}} onClick={()=>hs('Sesiones')}>
+            <span style={{display:'inline-flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>Sesiones
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={sk==='Sesiones'?C.y:'var(--t3)'} strokeWidth="2" strokeLinecap="round">
+                {sk==='Sesiones'&&asc?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
+              </svg>
+            </span>
+          </th>
           <th style={{...th,textAlign:'right'}}>Tasa</th>
         </tr></thead>
         <tbody>
@@ -628,23 +668,19 @@ const RankTable=({data})=>{
             <tr key={d.name} style={{borderBottom:'1px solid var(--brd)',background:i===0?'rgba(251,191,36,.05)':'transparent'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(251,191,36,.04)'} onMouseLeave={e=>e.currentTarget.style.background=i===0?'rgba(251,191,36,.05)':'transparent'}>
               <td style={{padding:'12px 16px',fontSize:13,fontWeight:900,color:'var(--t3)'}}>{med}</td>
               <td style={{padding:'12px 16px',fontWeight:700,color:'var(--t1)',maxWidth:230,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.name}</td>
-              <td style={{padding:'12px 16px',fontWeight:800,color:'var(--t1)',textAlign:'right'}}>
-                {d.Inscritos}
-                <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',marginTop:2}}>
-                  {totals.ins>0?((d.Inscritos/totals.ins)*100).toFixed(1):0}%
-                </div>
+              <td style={{padding:'12px 16px',fontWeight:800,color:'var(--t1)',textAlign:'right'}}>{d.Inscritos}</td>
+              <td style={{padding:'12px 16px',fontWeight:600,color:'var(--t3)',textAlign:'right'}}>
+                {totals.ins>0?((d.Inscritos/totals.ins)*100).toFixed(1):0}%
               </td>
-              <td style={{padding:'12px 16px',fontWeight:800,color:C.y,textAlign:'right'}}>
-                {d.Aprobados}
-                <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',marginTop:2}}>
-                  {totals.apr>0?((d.Aprobados/totals.apr)*100).toFixed(1):0}%
-                </div>
+              <td style={{padding:'12px 16px',fontWeight:800,color:C.y,textAlign:'right'}}>{d.Aprobados}</td>
+              <td style={{padding:'12px 16px',fontWeight:600,color:'var(--t3)',textAlign:'right'}}>
+                {totals.apr>0?((d.Aprobados/totals.apr)*100).toFixed(1):0}%
               </td>
               <td style={{padding:'12px 16px',color:'var(--t2)',textAlign:'right'}}>{d.Sesiones}</td>
               <td style={{padding:'12px 16px',textAlign:'right'}}><span className={`badge ${bc}`}>{t}%</span></td>
             </tr>
           );})}
-          {!sorted.length&&<tr><td colSpan={6} style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>Sin datos</td></tr>}
+          {!sorted.length&&<tr><td colSpan={8} style={{padding:32,textAlign:'center',color:'var(--t3)',fontSize:13}}>Sin datos</td></tr>}
         </tbody></table>
       </div>
     </>
