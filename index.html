@@ -223,7 +223,7 @@ const AreaChart=({data,dark})=>{
 };
 
 /* ── BAR CHART (grouped, vertical) ── */
-const BarChart=({data,lk='name',colors,dark,height=280,rotate=true,clickable=false,onClickBar,sortable=true})=>{
+const BarChart=({data,lk='name',colors,dark,height=280,rotate=true,clickable=false,onClickBar,sortable=true,totalIns,totalApr})=>{
   const[showIns,setShowIns]=useState(true);const[showApr,setShowApr]=useState(true);
   const canR=useRef(null),chR=useRef(null);
   const dc=dark?['#60A5FA','#FBBF24']:(colors||['#1E3A5F','#FBBF24']);
@@ -235,6 +235,8 @@ const BarChart=({data,lk='name',colors,dark,height=280,rotate=true,clickable=fal
       return b.Inscritos-a.Inscritos;
     });
   },[data,showIns,showApr,sortable]);
+  const sumIns=useMemo(()=>totalIns??data.reduce((acc,d)=>acc+(d.Inscritos||0),0),[data,totalIns]);
+  const sumApr=useMemo(()=>totalApr??data.reduce((acc,d)=>acc+(d.Aprobados||0),0),[data,totalApr]);
   useEffect(()=>{
     if(!canR.current||!window.Chart||!sortedData.length) return;
     killChart(chR);
@@ -259,7 +261,19 @@ const BarChart=({data,lk='name',colors,dark,height=280,rotate=true,clickable=fal
             labels:{color:leg,font:{family:fontFamily,weight:'700',size:12}},
             onClick:(e,legendItem,legend)=>{sfx();const idx=legendItem.datasetIndex;if(idx===0)setShowIns(p=>!p);if(idx===1)setShowApr(p=>!p);}
           },
-          tooltip:{cornerRadius:10,titleFont:{family:fontFamily,weight:'700'},bodyFont:{family:fontFamily}},
+          tooltip:{
+            cornerRadius:10,
+            titleFont:{family:fontFamily,weight:'700'},
+            bodyFont:{family:fontFamily},
+            callbacks:{
+              label:(ctx)=>{
+                const val=ctx.parsed.y||0;
+                const tot=ctx.datasetIndex===0?sumIns:sumApr;
+                const pct=tot>0?((val/tot)*100).toFixed(1):0;
+                return `${ctx.dataset.label}: ${val} (${pct}% del total)`;
+              }
+            }
+          },
           datalabels:{
             display:true,
             anchor:'end',
@@ -272,13 +286,13 @@ const BarChart=({data,lk='name',colors,dark,height=280,rotate=true,clickable=fal
         scales:{x:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:10},maxRotation:rotate?40:0}},y:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}},grace:'8%'}}}
     });
     return()=>killChart(chR);
-  },[sortedData,dark,showIns,showApr]);
+  },[sortedData,dark,showIns,showApr,sumIns,sumApr]);
   if(!data.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin datos</p>;
   return <div style={{position:'relative',height}}><canvas ref={canR}/></div>;
 };
 
 /* ── HORIZONTAL BAR CHART ──────────── */
-const HBarChart=({data,lk='name',colors,dark,height,clickable=false,onClickBar,sortable=true})=>{
+const HBarChart=({data,lk='name',colors,dark,height,clickable=false,onClickBar,sortable=true,totalIns,totalApr})=>{
   const[showIns,setShowIns]=useState(true);const[showApr,setShowApr]=useState(true);
   const canR=useRef(null),chR=useRef(null);
   const dc=dark?['#60A5FA','#FBBF24']:(colors||['#1E3A5F','#FBBF24']);
@@ -290,6 +304,8 @@ const HBarChart=({data,lk='name',colors,dark,height,clickable=false,onClickBar,s
       return b.Inscritos-a.Inscritos;
     });
   },[data,showIns,showApr,sortable]);
+  const sumIns=useMemo(()=>totalIns??data.reduce((acc,d)=>acc+(d.Inscritos||0),0),[data,totalIns]);
+  const sumApr=useMemo(()=>totalApr??data.reduce((acc,d)=>acc+(d.Aprobados||0),0),[data,totalApr]);
   const h=height||Math.max(280,sortedData.length*46);
   useEffect(()=>{
     if(!canR.current||!window.Chart||!sortedData.length) return;
@@ -309,7 +325,19 @@ const HBarChart=({data,lk='name',colors,dark,height,clickable=false,onClickBar,s
             labels:{color:leg,font:{family:fontFamily,weight:'700',size:12}},
             onClick:(e,legendItem,legend)=>{sfx();const idx=legendItem.datasetIndex;if(idx===0)setShowIns(p=>!p);if(idx===1)setShowApr(p=>!p);}
           },
-          tooltip:{cornerRadius:10,titleFont:{family:fontFamily,weight:'700'},bodyFont:{family:fontFamily}},
+          tooltip:{
+            cornerRadius:10,
+            titleFont:{family:fontFamily,weight:'700'},
+            bodyFont:{family:fontFamily},
+            callbacks:{
+              label:(ctx)=>{
+                const val=ctx.parsed.x||0;
+                const tot=ctx.datasetIndex===0?sumIns:sumApr;
+                const pct=tot>0?((val/tot)*100).toFixed(1):0;
+                return `${ctx.dataset.label}: ${val} (${pct}% del total)`;
+              }
+            }
+          },
           datalabels:{
             display:true,
             anchor:'end',
@@ -322,7 +350,7 @@ const HBarChart=({data,lk='name',colors,dark,height,clickable=false,onClickBar,s
         scales:{x:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11}},grace:'8%'},y:{grid:{color:grid},ticks:{color:tick,font:{family:fontFamily,size:11},crossAlign:'far'}}}}
     });
     return()=>killChart(chR);
-  },[sortedData,dark,showIns,showApr]);
+  },[sortedData,dark,showIns,showApr,sumIns,sumApr]);
   if(!data.length) return <p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Sin datos</p>;
   return <div style={{position:'relative',height:h}}><canvas ref={canR}/></div>;
 };
@@ -570,6 +598,11 @@ const RankTable=({data})=>{
   const[sk,setSk]=useState('Inscritos');const[asc,setAsc]=useState(false);
   const sorted=useMemo(()=>[...data].sort((a,b)=>asc?a[sk]-b[sk]:b[sk]-a[sk]),[data,sk,asc]);
   const hs=k=>{sfx();k===sk?setAsc(p=>!p):(setSk(k),setAsc(false));};
+  const totals=useMemo(()=>{
+    let ins=0;let apr=0;
+    data.forEach(d=>{ins+=d.Inscritos;apr+=d.Aprobados;});
+    return{ins,apr};
+  },[data]);
   const exp=()=>{const rows=[['#','Taller','Inscritos','Aprobados','Sesiones','Tasa%'],...sorted.map((d,i)=>[i+1,`"${d.name}"`,d.Inscritos,d.Aprobados,d.Sesiones,d.Inscritos>0?(d.Aprobados/d.Inscritos*100).toFixed(1):0])];const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ranking_talleres.csv';a.click();};
   const cols=[{k:'Inscritos',l:'Inscr.'},{k:'Aprobados',l:'Aprobados'},{k:'Sesiones',l:'Sesiones'}];
   const th={padding:'10px 16px',fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--t3)',userSelect:'none'};
@@ -595,8 +628,18 @@ const RankTable=({data})=>{
             <tr key={d.name} style={{borderBottom:'1px solid var(--brd)',background:i===0?'rgba(251,191,36,.05)':'transparent'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(251,191,36,.04)'} onMouseLeave={e=>e.currentTarget.style.background=i===0?'rgba(251,191,36,.05)':'transparent'}>
               <td style={{padding:'12px 16px',fontSize:13,fontWeight:900,color:'var(--t3)'}}>{med}</td>
               <td style={{padding:'12px 16px',fontWeight:700,color:'var(--t1)',maxWidth:230,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.name}</td>
-              <td style={{padding:'12px 16px',fontWeight:800,color:'var(--t1)',textAlign:'right'}}>{d.Inscritos}</td>
-              <td style={{padding:'12px 16px',fontWeight:800,color:C.y,textAlign:'right'}}>{d.Aprobados}</td>
+              <td style={{padding:'12px 16px',fontWeight:800,color:'var(--t1)',textAlign:'right'}}>
+                {d.Inscritos}
+                <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',marginTop:2}}>
+                  {totals.ins>0?((d.Inscritos/totals.ins)*100).toFixed(1):0}%
+                </div>
+              </td>
+              <td style={{padding:'12px 16px',fontWeight:800,color:C.y,textAlign:'right'}}>
+                {d.Aprobados}
+                <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',marginTop:2}}>
+                  {totals.apr>0?((d.Aprobados/totals.apr)*100).toFixed(1):0}%
+                </div>
+              </td>
               <td style={{padding:'12px 16px',color:'var(--t2)',textAlign:'right'}}>{d.Sesiones}</td>
               <td style={{padding:'12px 16px',textAlign:'right'}}><span className={`badge ${bc}`}>{t}%</span></td>
             </tr>
@@ -678,7 +721,7 @@ const Heatmap=({fData,dark,metric='Inscritos'})=>{
       if(d.aprobo)accApr[d.taller][d.fecha]=(accApr[d.taller][d.fecha]||0)+1;
     });
     const talleres=[...new Set(fData.map(d=>d.taller))].slice(0,12);
-    const fechas=[...new Set(fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).map(d=>d.fecha))].sort().slice(0,20);
+    const fechas=[...new Set(fData.filter(d=>!['Sin fecha','Fecha Desconocida'].includes(d.fecha)).map(d=>d.fecha))].sort();
     const matrix=talleres.map(t=>fechas.map(f=>({
       ins:accIns[t]?.[f]||0,
       apr:accApr[t]?.[f]||0
@@ -871,7 +914,13 @@ const Heatmap=({fData,dark,metric='Inscritos'})=>{
 /* ── DETAIL MODAL ──────────────────── */
 const Modal=({modal,fData,onClose})=>{
   const{tipo,nombre}=modal;
-  const rows=useMemo(()=>{if(tipo==='sede')return fData.filter(d=>d.sede===nombre);if(tipo==='escuela')return fData.filter(d=>!d.esDocente&&d.escuela===nombre);if(tipo==='carrera')return fData.filter(d=>!d.esDocente&&d.carrera===nombre);return[];},[fData,tipo,nombre]);
+  const rows=useMemo(()=>{
+    if(tipo==='sede')return fData.filter(d=>d.sede===nombre);
+    if(tipo==='docentes_sede')return fData.filter(d=>d.esDocente&&d.sede===nombre);
+    if(tipo==='escuela')return fData.filter(d=>!d.esDocente&&d.escuela===nombre);
+    if(tipo==='carrera')return fData.filter(d=>!d.esDocente&&d.carrera===nombre);
+    return[];
+  },[fData,tipo,nombre]);
   
   const byS=useMemo(()=>{
     const acc={};
@@ -894,7 +943,7 @@ const Modal=({modal,fData,onClose})=>{
   },[rows]);
 
   const total=rows.length,apr=rows.filter(d=>d.aprobo).length,tasa=total>0?((apr/total)*100).toFixed(1):0;
-  const lbl={sede:'Sede',escuela:'Escuela',carrera:'Carrera'}[tipo]||tipo;
+  const lbl={sede:'Sede',docentes_sede:'Docentes por Sede',escuela:'Escuela',carrera:'Carrera'}[tipo]||tipo;
   
   useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose();};window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);},[onClose]);
   
@@ -935,7 +984,7 @@ const Modal=({modal,fData,onClose})=>{
           )}
           <div>
             <p style={{fontSize:11,fontWeight:800,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:8}}>
-              {tipo==='sede'?'Desglose de Talleres':'Participación por Taller'}
+              {['sede','docentes_sede'].includes(tipo)?'Desglose de Talleres':'Participación por Taller'}
             </p>
             <div style={{borderRadius:12,border:'1px solid var(--brd)',overflow:'hidden'}}>
               <table><thead style={{background:'var(--solid)'}}><tr style={{borderBottom:'1px solid var(--brd)'}}>
@@ -955,7 +1004,7 @@ const Modal=({modal,fData,onClose})=>{
         </div>
         <div style={{padding:'11px 16px',borderTop:'1px solid var(--brd)',background:'var(--brd)'}}>
           <p style={{fontSize:11,color:'var(--t3)',fontWeight:600}}>
-            {tipo==='sede'?`${byT.length} talleres`:`${byS.length} sedes · ${byT.length} talleres`} · Esc para cerrar
+            {['sede','docentes_sede'].includes(tipo)?`${byT.length} talleres`:`${byS.length} sedes · ${byT.length} talleres`} · Esc para cerrar
           </p>
         </div>
       </div>
@@ -966,27 +1015,46 @@ const Modal=({modal,fData,onClose})=>{
 /* ── UPLOAD SCREEN ─────────────────── */
 const Upload=({onData,err,setErr,dark,toggleDark,soundOn,toggleSound})=>{
   const[drag,setDrag]=useState(false);const[mes,setMes]=useState('');
-  const go=(file,m)=>{if(/\.xlsx?$/.test(file.name)){setErr('Guarda el Excel como CSV primero.');return;}const r=new FileReader();r.onload=ev=>onData(ev.target.result,m);r.readAsText(file,'ISO-8859-1');};
-  const drop=e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(!f)return;const det=detectMes(f.name)||mes;if(!det){setErr(`No se detectó el mes en "${f.name}". Selecciónalo abajo.`);return;}go(f,det);};
-  const pick=e=>{const f=e.target.files[0];if(!f)return;const det=detectMes(f.name)||mes;if(!det){setErr('No se detectó el mes. Selecciónalo manualmente.');e.target.value=null;return;}go(f,det);e.target.value=null;};
+  const goMultiple=(files)=>{
+    const csvFiles=Array.from(files).filter(f=>/\.csv$/i.test(f.name));
+    if(!csvFiles.length){setErr('Sube archivos CSV válidos.');return;}
+    const hasExcel=Array.from(files).some(f=>/\.xlsx?$/i.test(f.name));
+    if(hasExcel){setErr('Guarda el Excel como CSV primero.');return;}
+    const promises=csvFiles.map(file=>new Promise((resolve,reject)=>{
+      const det=detectMes(file.name)||mes;
+      if(!det){reject(new Error(`No se detectó el mes en "${file.name}". Selecciónalo abajo.`));return;}
+      const r=new FileReader();
+      r.onload=ev=>resolve({txt:ev.target.result,key:det});
+      r.onerror=()=>reject(new Error(`Error leyendo "${file.name}"`));
+      r.readAsText(file,'ISO-8859-1');
+    }));
+    Promise.all(promises).then(results=>{
+      setErr(null);
+      onData(results);
+    }).catch(e=>{
+      setErr(e.message);
+    });
+  };
+  const drop=e=>{e.preventDefault();setDrag(false);if(e.dataTransfer.files&&e.dataTransfer.files.length)goMultiple(e.dataTransfer.files);};
+  const pick=e=>{if(e.target.files&&e.target.files.length)goMultiple(e.target.files);e.target.value=null;};
   return(
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:'var(--bg)',fontFamily:'inherit',position:'relative'}} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={drop}>
       <div style={{position:'fixed',top:20,right:20,zIndex:100,display:'flex',gap:8}}>
         <button onClick={toggleSound} className="btnI"><Ico n={soundOn?'volume':'volumeX'} size={17}/></button>
         <button onClick={toggleDark} className="btnI"><Ico n={dark?'sun':'moon'} size={17}/></button>
       </div>
-      {drag&&(<div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(8,13,26,.92)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,pointerEvents:'none'}}><span style={{fontSize:60}}>📂</span><p style={{color:'#fff',fontWeight:900,fontSize:22}}>Suelta el archivo CSV</p><p style={{color:'rgba(255,255,255,.5)',fontSize:14}}>El mes se detecta desde el nombre</p></div>)}
+      {drag&&(<div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(8,13,26,.92)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,pointerEvents:'none'}}><span style={{fontSize:60}}>📂</span><p style={{color:'#fff',fontWeight:900,fontSize:22}}>Suelta los archivos CSV</p><p style={{color:'rgba(255,255,255,.5)',fontSize:14}}>El mes se detectará desde el nombre de cada archivo</p></div>)}
       <div className="scPop" style={{background:'var(--gb)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',border:'1px solid var(--gbr)',borderRadius:26,boxShadow:'var(--shx)',padding:40,maxWidth:440,width:'100%',textAlign:'center',position:'relative'}}>
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/3840px-Logo_DuocUC.svg.png" alt="Duoc UC" style={{height:38,objectFit:'contain',marginBottom:20}}/>
         <h1 style={{fontSize:22,fontWeight:900,color:'var(--t1)',marginBottom:6}}>Monitor de Talleres</h1>
         <p style={{fontSize:13,color:'var(--t3)',lineHeight:1.65,marginBottom:28}}>Área Formativa · Bibliotecas Duoc UC</p>
         <label style={{display:'block',cursor:'pointer',marginBottom:16}}>
-          <input type="file" accept=".csv" style={{display:'none'}} onChange={pick}/>
+          <input type="file" accept=".csv" multiple style={{display:'none'}} onChange={pick}/>
           <div className={`uZone${drag?' on':''}`}>
             <div style={{width:56,height:56,background:'linear-gradient(135deg,#FBBF24,#D97706)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',boxShadow:'0 5px 20px rgba(251,191,36,.4)'}}><Ico n="upload" size={26} color="#0F172A"/></div>
             <p style={{fontWeight:800,fontSize:15,color:'var(--t1)',marginBottom:5}}>Arrastra o haz clic para subir</p>
-            <p style={{fontSize:12,color:'var(--t3)',marginBottom:12}}>Solo archivos CSV</p>
-            <span style={{fontSize:11,background:'var(--brd)',padding:'5px 13px',borderRadius:20,color:'var(--t2)',fontWeight:600}}>Ej: <b>asistencia_abril.csv</b> — mes auto-detectado</span>
+            <p style={{fontSize:12,color:'var(--t3)',marginBottom:12}}>Puedes subir varios archivos CSV a la vez</p>
+            <span style={{fontSize:11,background:'var(--brd)',padding:'5px 13px',borderRadius:20,color:'var(--t2)',fontWeight:600}}>Ej: <b>abril.csv, mayo.csv</b> — mes auto-detectado</span>
           </div>
         </label>
         <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',background:'var(--brd)',borderRadius:13,marginBottom:14}}>
@@ -1045,12 +1113,28 @@ function App(){
     });
   };
 
-  const process=(txt,key)=>{
+  const process=(txtOrArray,key)=>{
     try{
-      const rows=parseRows(txt,key);
-      setErr(null);
-      setDs(p=>({...p,[key]:rows}));setSM([key]);setExS([]);setExT([]);setExF([]);setMN('');sfx('ok');
-    }catch(e){console.error(e);setErr(`Error al procesar ${key}: ${e.message}`);}
+      if(Array.isArray(txtOrArray)){
+        const newDsUpdates={};
+        const newKeys=[];
+        txtOrArray.forEach(({txt,key:k})=>{
+          const rows=parseRows(txt,k);
+          newDsUpdates[k]=rows;
+          newKeys.push(k);
+        });
+        setErr(null);
+        setDs(p=>({...p,...newDsUpdates}));
+        setSM(newKeys);
+        setExS([]);setExT([]);setExF([]);setMN('');sfx('ok');
+      } else {
+        const rows=parseRows(txtOrArray,key);
+        setErr(null);
+        setDs(p=>({...p,[key]:rows}));
+        setSM([key]);
+        setExS([]);setExT([]);setExF([]);setMN('');sfx('ok');
+      }
+    }catch(e){console.error(e);setErr(`Error al procesar: ${e.message}`);}
   };
 
   useEffect(()=>{
@@ -1080,7 +1164,34 @@ function App(){
     });
   },[]);
 
-  const onDrop=e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(!f)return;if(/\.xlsx?$/.test(f.name)){setErr('Guarda como CSV.');return;}const det=detectMes(f.name)||mNuevo;if(!det){setErr(`No se detectó mes en "${f.name}". Selecciónalo arriba.`);return;}const r=new FileReader();r.onload=ev=>process(ev.target.result,det);r.readAsText(f,'ISO-8859-1');};
+  const processFileList=(files,fallbackMonth)=>{
+    const csvFiles=Array.from(files).filter(f=>/\.csv$/i.test(f.name));
+    if(!csvFiles.length){setErr('Sube archivos CSV.');return;}
+    const hasExcel=Array.from(files).some(f=>/\.xlsx?$/i.test(f.name));
+    if(hasExcel){setErr('Guarda como CSV.');return;}
+    const promises=csvFiles.map(file=>new Promise((resolve,reject)=>{
+      const det=detectMes(file.name)||fallbackMonth;
+      if(!det){reject(new Error(`No se detectó el mes en "${file.name}".`));return;}
+      const r=new FileReader();
+      r.onload=ev=>resolve({txt:ev.target.result,key:det});
+      r.onerror=()=>reject(new Error(`Error leyendo "${file.name}"`));
+      r.readAsText(file,'ISO-8859-1');
+    }));
+    Promise.all(promises).then(results=>{
+      setErr(null);
+      const newDsUpdates={};const newKeys=[];
+      results.forEach(({txt,key:k})=>{
+        const rows=parseRows(txt,k);
+        newDsUpdates[k]=rows;
+        newKeys.push(k);
+      });
+      setDs(p=>({...p,...newDsUpdates}));
+      setSM(p=>[...new Set([...p,...newKeys])]);
+      setExS([]);setExT([]);setExF([]);setMN('');sfx('ok');
+    }).catch(e=>setErr(e.message));
+  };
+
+  const onDrop=e=>{e.preventDefault();setDrag(false);if(e.dataTransfer.files&&e.dataTransfer.files.length)processFileList(e.dataTransfer.files,mNuevo);};
 
   const opS=useMemo(()=>{
     const b=sM.length?raw.filter(d=>sM.includes(d.mes)):raw;
@@ -1111,6 +1222,14 @@ function App(){
   const togM=m=>{sfx();setSM(m==='Todos'?[]:p=>p.includes(m)?p.filter(x=>x!==m):[...p,m]);setExF([]);};
 
   const stats=useMemo(()=>{const ins=fData.length,apr=fData.filter(d=>d.aprobo).length;return{ins,apr,tasa:ins>0?+((apr/ins)*100).toFixed(1):0};},[fData]);
+  const totalStuds=useMemo(()=>{
+    const studs=fData.filter(d=>!d.esDocente);
+    return{ins:studs.length,apr:studs.filter(d=>d.aprobo).length};
+  },[fData]);
+  const totalDocs=useMemo(()=>{
+    const docs=fData.filter(d=>d.esDocente);
+    return{ins:docs.length,apr:docs.filter(d=>d.aprobo).length};
+  },[fData]);
   const byDate=useMemo(()=>{const acc={};fData.forEach(d=>{if(['Fecha Desconocida','Sin fecha'].includes(d.fecha))return;if(!acc[d.fecha])acc[d.fecha]={f:d.fecha,Inscritos:0,Aprobados:0,talleres:new Set()};acc[d.fecha].Inscritos++;if(d.aprobo)acc[d.fecha].Aprobados++;if(d.taller)acc[d.fecha].talleres.add(d.taller);});return Object.values(acc).map(d=>({...d,label:fmtD(d.f),talleresList:Array.from(d.talleres)})).sort((a,b)=>a.f.localeCompare(b.f));},[fData]);
   const byTaller=useMemo(()=>{const acc={};fData.forEach(d=>{if(!acc[d.taller])acc[d.taller]={name:d.taller,Inscritos:0,Aprobados:0,_f:new Set()};acc[d.taller].Inscritos++;if(d.aprobo)acc[d.taller].Aprobados++;if(!['Fecha Desconocida','Sin fecha'].includes(d.fecha))acc[d.taller]._f.add(d.fecha);});return Object.values(acc).map(d=>({name:d.name,Inscritos:d.Inscritos,Aprobados:d.Aprobados,Sesiones:d._f.size||1})).sort((a,b)=>b.Inscritos-a.Inscritos);},[fData]);
   const byMes=useMemo(()=>{
@@ -1167,7 +1286,7 @@ function App(){
             <div style={{display:'flex',alignItems:'center',gap:7,padding:'8px 12px',background:'var(--brd)',borderRadius:12}}>
               <select value={mNuevo} onChange={e=>{sfx();setMN(e.target.value);}} style={{fontSize:12}}><option value="" disabled>Agregar mes</option>{MESES.map(m=><option key={m} value={m}>{m}</option>)}</select>
               <div style={{position:'relative',overflow:'hidden'}}>
-                <input type="file" accept=".csv" onChange={e=>{const f=e.target.files[0];if(!f)return;if(/\.xlsx?$/.test(f.name)){setErr('Guarda como CSV.');e.target.value=null;return;}const det=detectMes(f.name)||mNuevo;if(!det){setErr('Selecciona el mes primero.');e.target.value=null;return;}const r=new FileReader();r.onload=ev=>process(ev.target.result,det);r.readAsText(f,'ISO-8859-1');e.target.value=null;}} style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',zIndex:2}}/>
+                <input type="file" accept=".csv" multiple onChange={e=>{if(e.target.files&&e.target.files.length)processFileList(e.target.files,mNuevo);e.target.value=null;}} style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',zIndex:2}}/>
                 <button className="btnP" style={{pointerEvents:'none',padding:'7px 14px'}}><Ico n="upload" size={13} color="#0F172A"/>CSV</button>
               </div>
             </div>
@@ -1208,7 +1327,7 @@ function App(){
         {tab==='resumen'&&(
           <div style={{display:'flex',flexDirection:'column',gap:16}} className="fadeUp">
             <div className="cWrap"><SH icon="cal" title="Asistencia por Fecha" sub="Evolución temporal de inscritos y aprobados"/><AreaChart data={byDate} dark={dark}/></div>
-            <div className="cWrap"><SH icon="bar" title="Por Taller" sub={`Top ${Math.min(byTaller.length,12)} talleres`}/><BarChart data={byTaller.slice(0,12)} dark={dark} height={320}/></div>
+            <div className="cWrap"><SH icon="bar" title="Por Taller" sub={`Top ${Math.min(byTaller.length,12)} talleres`}/><BarChart data={byTaller.slice(0,12)} dark={dark} totalIns={stats.ins} totalApr={stats.apr} height={320}/></div>
             <div className="cWrap"><RankTable data={byTaller}/></div>
           </div>
         )}
@@ -1218,7 +1337,7 @@ function App(){
           <div style={{display:'flex',flexDirection:'column',gap:16}} className="fadeUp">
             <div className="cWrap">
               <SH icon="compare" title="Comparación Mensual" sub="Todos los meses cargados lado a lado"/>
-              {byMes.length?<BarChart data={byMes} lk="name" dark={dark} rotate={false} sortable={false} height={280}/>:<p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Carga más de un mes para ver la comparación</p>}
+              {byMes.length?<BarChart data={byMes} lk="name" dark={dark} rotate={false} sortable={false} totalIns={stats.ins} totalApr={stats.apr} height={280}/>:<p style={{textAlign:'center',padding:32,color:'var(--t3)',fontSize:13}}>Carga más de un mes para ver la comparación</p>}
             </div>
              <div className="twoCol" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div className="cWrap"><SH icon="compare" title="Top 5 Sedes · Desempeño" sub="Inscritos y aprobados (eje izq) vs tasa de aprobación % (eje der)"/><TopSedesCombo bySede={bySede} dark={dark}/></div>
@@ -1239,10 +1358,10 @@ function App(){
         {/* ══ SEDES ══ */}
         {tab==='sedes'&&(
           <div style={{display:'flex',flexDirection:'column',gap:16}} className="fadeUp">
-            {bySede.length>0&&(<div className="cWrap"><SH icon="pin" title="Por Sede" sub="Clic en barra para ver detalle"/><BarChart data={bySede} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'sede',nombre:d.name});}} height={310}/></div>)}
-            {byEsc.length>0&&(<div className="cWrap"><SH icon="bld" title="Por Escuela" sub="Clic en barra para ver las sedes asociadas"/><HBarChart data={byEsc} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'escuela',nombre:d.name});}}/></div>)}
-            {byCar.length>0&&(<div className="cWrap"><SH icon="book" title="Por Carrera (Top 15)" sub="Clic en barra para ver las sedes asociadas"/><HBarChart data={byCar} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'carrera',nombre:d.name});}}/></div>)}
-            {byDoc.length>0&&(<div className="cWrap"><SH icon="users" title="Docentes por Sede"/><BarChart data={byDoc} dark={dark} height={280}/></div>)}
+            {bySede.length>0&&(<div className="cWrap"><SH icon="pin" title="Por Sede" sub="Clic en barra para ver detalle"/><BarChart data={bySede} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'sede',nombre:d.name});}} totalIns={stats.ins} totalApr={stats.apr} height={310}/></div>)}
+            {byEsc.length>0&&(<div className="cWrap"><SH icon="bld" title="Por Escuela" sub="Clic en barra para ver las sedes asociadas"/><HBarChart data={byEsc} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'escuela',nombre:d.name});}} totalIns={totalStuds.ins} totalApr={totalStuds.apr}/></div>)}
+            {byCar.length>0&&(<div className="cWrap"><SH icon="book" title="Por Carrera (Top 15)" sub="Clic en barra para ver las sedes asociadas"/><HBarChart data={byCar} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'carrera',nombre:d.name});}} totalIns={totalStuds.ins} totalApr={totalStuds.apr}/></div>)}
+            {byDoc.length>0&&(<div className="cWrap"><SH icon="users" title="Docentes por Sede" sub="Clic en barra para ver talleres asociados"/><BarChart data={byDoc} dark={dark} clickable={true} onClickBar={d=>{sfx();setModal({tipo:'docentes_sede',nombre:d.name});}} totalIns={totalDocs.ins} totalApr={totalDocs.apr} height={280}/></div>)}
             {!bySede.length&&!byEsc.length&&(<div style={{padding:52,textAlign:'center',color:'var(--t3)',fontSize:13}}>Sin datos demográficos. El CSV necesita columnas <b>sede</b>, <b>escuela</b> y/o <b>carrera</b>.</div>)}
           </div>
         )}
